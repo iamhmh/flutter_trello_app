@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class BoardWidget extends StatelessWidget{
+class RegisterScreen extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
