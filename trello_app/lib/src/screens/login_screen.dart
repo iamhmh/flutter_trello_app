@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 class LoginScreen extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Login Screen'),
+      ),
+      body: Center(
+        child: Text('Welcome to your Login Screen!'),
+      ),
+    );
   }
-  
 }
