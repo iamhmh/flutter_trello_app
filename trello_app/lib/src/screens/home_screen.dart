@@ -20,26 +20,29 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xfff57b51),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center, // Ajouté pour centrer verticalement dans Column
         children: [
-          Expanded(
-              child: Center(
+          Padding( // Modifié pour ajouter le Padding ici
+            padding: const EdgeInsets.only(top: 50), // Ajustez selon le margin souhaité
             child: SizedBox(
-              height: 250,
-              width: 250,
+              height: 400,
+              width: 400,
               child: Image.asset('assets/images/logo.png'),
             ),
-          )),
+          ),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Center(
-                  child: Text('Gère tes tâches, tout simplement.',
-                      style: TextStyle(fontSize: 24, color: Colors.white),
-                      textAlign: TextAlign
-                          .center),
+                Padding(
+                  padding: const EdgeInsets.only(top: 40), 
+                  child: Text(
+                    'Gère tes tâches, tout simplement.',
+                    style: TextStyle(fontSize: 24, color: Color(0xfff8f3e5)),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: Padding(
@@ -47,12 +50,12 @@ class HomeScreen extends StatelessWidget {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       onPressed: () => _showBottomSheet(context),
-                      child: Text('Connexion',
+                      child: Text(
+                        'Connexion',
                         style: TextStyle(fontSize: 12, color: Colors.black),
                       ),
                     ),
@@ -66,12 +69,12 @@ class HomeScreen extends StatelessWidget {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       onPressed: () => _showBottomSheet(context),
-                      child: Text('Inscription',
+                      child: Text(
+                        'Inscription',
                         style: TextStyle(fontSize: 12, color: Colors.black),
                       ),
                     ),
