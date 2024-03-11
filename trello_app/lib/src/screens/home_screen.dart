@@ -15,15 +15,15 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Se connecter / S\'inscrire', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('Log in / Sign up', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => _authService.authenticate(context), // Utilise authenticate pour la connexion
-                child: Text('Se connecter avec une adresse e-mail'),
+                child: Text('Log in with email'),
               ),
               ElevatedButton(
                 onPressed: () => _authService.authenticate(context), // Réutilise authenticate pour l'inscription
-                child: Text('Se connecter avec Google'),
+                child: Text('Log in with Google'),
               ),
             ],
           ),
@@ -58,7 +58,7 @@ class HomeScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 40),
                   child: Text(
-                    'Gère tes tâches, tout simplement.',
+                    'Just manage your tasks.',
                     style: TextStyle(fontSize: 24, color: Color(0xfff8f3e5)),
                     textAlign: TextAlign.center,
                   ),
@@ -76,7 +76,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       onPressed: () => _showBottomSheet(context),
                       child: Text(
-                        'Connexion',
+                        'Log in',
                         style: TextStyle(fontSize: 12, color: Colors.black),
                       ),
                     ),
@@ -95,7 +95,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       onPressed: () => _showBottomSheet(context),
                       child: Text(
-                        'Inscription',
+                        'Sign up',
                         style: TextStyle(fontSize: 12, color: Colors.black),
                       ),
                     ),
