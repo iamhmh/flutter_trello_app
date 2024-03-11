@@ -1,29 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:trello_app/src/services/trello_auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
+    final TrelloAuthService _authService = TrelloAuthService();
+
   void _showBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
         return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20),
           height: 200,
-          child: Center(
-            child: Text('Bottom Sheet Content'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Se connecter / S\'inscrire', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => _authService.authenticate(context), // Utilise authenticate pour la connexion
+                child: Text('Se connecter avec une adresse e-mail'),
+              ),
+              ElevatedButton(
+                onPressed: () => _authService.authenticate(context), // Réutilise authenticate pour l'inscription
+                child: Text('Se connecter avec Google'),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xfff57b51),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Ajouté pour centrer verticalement dans Column
+        mainAxisAlignment: MainAxisAlignment
+            .center, // Ajouté pour centrer verticalement dans Column
         children: [
-          Padding( // Modifié pour ajouter le Padding ici
-            padding: const EdgeInsets.only(top: 50), // Ajustez selon le margin souhaité
+          Padding(
+            // Modifié pour ajouter le Padding ici
+            padding: const EdgeInsets.only(
+                top: 50), // Ajustez selon le margin souhaité
             child: SizedBox(
               height: 400,
               width: 400,
@@ -35,7 +56,7 @@ class HomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 40), 
+                  padding: const EdgeInsets.only(top: 40),
                   child: Text(
                     'Gère tes tâches, tout simplement.',
                     style: TextStyle(fontSize: 24, color: Color(0xfff8f3e5)),
