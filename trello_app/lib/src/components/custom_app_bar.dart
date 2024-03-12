@@ -7,7 +7,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: Color(0xfff57b51),
         centerTitle: true,
         title: Container(
-          height: 50,
+          height: 80,
           child: Image.asset('assets/images/logo.png'),
         ),
       );

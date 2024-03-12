@@ -32,19 +32,15 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xfff57b51),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment
-            .center, // Ajouté pour centrer verticalement dans Column
+        mainAxisAlignment: MainAxisAlignment.center, 
         children: [
           Padding(
-            // Modifié pour ajouter le Padding ici
-            padding: const EdgeInsets.only(
-                top: 50), // Ajustez selon le margin souhaité
+            padding: const EdgeInsets.only(top: 50),
             child: SizedBox(
               height: 400,
               width: 400,

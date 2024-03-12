@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:trello_app/src/screens/home_screen.dart';
-import 'package:trello_app/src/screens/login_screen.dart';
 
 class MyApp extends StatelessWidget {
   @override
@@ -18,7 +17,7 @@ class MyApp extends StatelessWidget {
         const Locale('en', ''), // English, no country code
         // Other locales your app supports
       ],
-      title: 'Flutter Demo',
+      title: 'Just Do Things',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

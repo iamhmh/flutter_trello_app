@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:trello_app/src/components/custom_navigation_bar.dart';
 import 'package:trello_app/src/components/custom_app_bar.dart';
+import 'package:trello_app/src/screens/account_screen.dart';
+import 'package:trello_app/src/screens/boards_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -12,10 +14,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   List<Widget> _widgetOptions() => [
         DashboardContent(), // Ici, tu utilises le widget DashboardContent pour la page d'accueil
-        Center(child: Text('Mes tableaux')),
+        BoardScreen(),
         Center(child: Text('Recherchez')),
         Center(child: Text('Notifications')),
-        Center(child: Text('Compte')),
+        AccountScreen(),
       ];
 
   void _onItemTapped(int index) {
@@ -77,7 +79,7 @@ class DashboardContent extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xfff57b51), // Couleur du bouton
+              backgroundColor: Color(0xfff57b51),
             ),
           ),
         ],
