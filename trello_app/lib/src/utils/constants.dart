@@ -1,5 +1,4 @@
 class Constants {
-
   //API Const
   static const String apiKey = 'c8065529ba56e9faab113d66aa08f125';
   static const String apiUrl = 'https://api.trello.com/1/';

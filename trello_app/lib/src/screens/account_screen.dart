@@ -3,12 +3,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:trello_app/src/screens/home_screen.dart';
 
 class AccountScreen extends StatelessWidget {
-  final storage = FlutterSecureStorage(); // Instance de FlutterSecureStorage
+  final storage = FlutterSecureStorage();
 
   void logout(BuildContext context) async {
-    await storage.delete(key: 'authToken'); // Supprime le token
+    await storage.delete(key: 'authToken');
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => HomeScreen()), // Redirige vers HomeScreen
+      MaterialPageRoute(builder: (context) => HomeScreen()),
       (Route<dynamic> route) => false,
     );
   }

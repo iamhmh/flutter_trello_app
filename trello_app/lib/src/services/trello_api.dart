@@ -7,37 +7,53 @@ import 'package:trello_app/src/models/lists.dart';
 import 'package:trello_app/src/models/card.dart';
 import 'package:trello_app/src/utils/constants.dart';
 
-class TrelloApi{
-
+class TrelloApi {
   //Workspaces
 
-  Future<List<Workspace>> getWorkspaces(String idWorkspace) async {
-  final response = await http.get(
-    Uri.parse('https://api.trello.com/1/organizations/$idWorkspace?key=${Constants.apiKey}&token=${Constants.apiToken}'),
-  );
-
-  if (response.statusCode == 200) {
-    final jsonData = jsonDecode(response.body) as List;
-    return jsonData.map((data) => Workspace.fromJson(data)).toList();
-  } else {
-    throw Exception('Failed to get workspaces: ${response.statusCode}');
-  }
-  }
-
-  Future<Workspace> createWorkspace(String name) async {
-    final url = 'https://api.trello.com/1/organizations?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.post(Uri.parse(url));
+  Future<List<Workspace>> getWorkspaces() async {
+    final response = await http.get(
+      Uri.parse(
+          'https://api.trello.com/1/members/me/organizations?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      return Workspace.fromJson(jsonData);
+      final jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((data) => Workspace.fromJson(data)).toList();
     } else {
-      throw Exception('Failed to create workspace: ${response.statusCode}');
+      throw Exception('Failed to get workspaces: ${response.statusCode}');
+    }
+  }
+
+  Future<Workspace> createWorkspace(String displayName) async {
+    final url = Uri.parse('https://api.trello.com/1/organizations');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'displayName': displayName, 
+        'key': Constants.apiKey,
+        'token': Constants.apiToken,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      return Workspace.fromJson(
+          jsonData);
+    } else {
+      print('Erreur lors de la création du workspace: ${response.statusCode}');
+      print('Réponse: ${response.body}');
+      throw Exception(
+          'Failed to create workspace: ${response.statusCode}, ${response.body}');
     }
   }
 
   Future<Workspace> updateWorkspace(String idWorkspace, String newName) async {
-    final url = 'https://api.trello.com/1/organizations/$idWorkspace?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/organizations/$idWorkspace?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.put(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -49,7 +65,8 @@ class TrelloApi{
   }
 
   Future<void> deleteWorkspace(String idWorkspace) async {
-    final url = 'https://api.trello.com/1/organizations/$idWorkspace?key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/organizations/$idWorkspace?key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.delete(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -59,36 +76,38 @@ class TrelloApi{
     }
   }
 
-  //Boards 
+  //Boards
 
   Future<List<Board>> getBoards(String idBoard) async {
     final response = await http.get(
-    Uri.parse('https://api.trello.com/1/boards/${idBoard}?key=${Constants.apiKey}&token=${Constants.apiToken}'),
-  );
+      Uri.parse(
+          'https://api.trello.com/1/boards/${idBoard}?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
 
-  if (response.statusCode == 200) {
-    final jsonData = jsonDecode(response.body) as List;
-    return jsonData.map((data) => Board.fromJson(data)).toList();
-  } else {
-    throw Exception('Failed to get boards: ${response.statusCode}');
-  }
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((data) => Board.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to get boards: ${response.statusCode}');
+    }
   }
 
   Future<Board> createBoard(String name) async {
-  final url = 'https://api.trello.com/1/boards?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
-  final response = await http.post(Uri.parse(url));
+    final url =
+        'https://api.trello.com/1/boards?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final response = await http.post(Uri.parse(url));
 
-  if (response.statusCode == 200) {
-    final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-    return Board.fromJson(jsonData);
-  } else {
-    throw Exception('Failed to create board: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+      return Board.fromJson(jsonData);
+    } else {
+      throw Exception('Failed to create board: ${response.statusCode}');
+    }
   }
-}
-
 
   Future<Board> updateBoard(String id, String newName) async {
-        final url = 'https://api.trello.com/1/boards/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/boards/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.put(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -100,7 +119,8 @@ class TrelloApi{
   }
 
   Future<void> deleteBoard(String id) async {
-        final url = 'https://api.trello.com/1/boards/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/boards/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.delete(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -113,20 +133,22 @@ class TrelloApi{
   //Lists
 
   Future<List<Lists>> getLists(String idLists) async {
-      final response = await http.get(
-    Uri.parse('https://api.trello.com/1/lists/$idLists?key=${Constants.apiKey}&token=${Constants.apiToken}'),
-  );
+    final response = await http.get(
+      Uri.parse(
+          'https://api.trello.com/1/lists/$idLists?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
 
-  if (response.statusCode == 200) {
-    final jsonData = jsonDecode(response.body) as List;
-    return jsonData.map((data) => Lists.fromJson(data)).toList();
-  } else {
-    throw Exception('Failed to get lists: ${response.statusCode}');
-  }
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((data) => Lists.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to get lists: ${response.statusCode}');
+    }
   }
 
   Future<Lists> createLists(String name) async {
-    final url = 'https://api.trello.com/1/lists?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/lists?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.post(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -138,7 +160,8 @@ class TrelloApi{
   }
 
   Future<Lists> updateLists(String id, String newName) async {
-        final url = 'https://api.trello.com/1/lists/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/lists/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.put(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -150,7 +173,8 @@ class TrelloApi{
   }
 
   Future<void> deleteLists(String id) async {
-        final url = 'https://api.trello.com/1/lists/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/lists/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.delete(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -163,20 +187,22 @@ class TrelloApi{
   //Cards
 
   Future<List<Card>> getCards(String idCards) async {
-      final response = await http.get(
-    Uri.parse('https://api.trello.com/1/cards/$idCards?key=${Constants.apiKey}&token=${Constants.apiToken}'),
-  );
+    final response = await http.get(
+      Uri.parse(
+          'https://api.trello.com/1/cards/$idCards?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
 
-  if (response.statusCode == 200) {
-    final jsonData = jsonDecode(response.body) as List;
-    return jsonData.map((data) => Card.fromJson(data)).toList();
-  } else {
-    throw Exception('Failed to get cards: ${response.statusCode}');
-  }
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((data) => Card.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to get cards: ${response.statusCode}');
+    }
   }
 
   Future<Card> createCards(String name) async {
-    final url = 'https://api.trello.com/1/cards?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/cards?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.post(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -188,7 +214,8 @@ class TrelloApi{
   }
 
   Future<Card> updateCards(String id, String newName) async {
-        final url = 'https://api.trello.com/1/cards/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/cards/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.put(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -200,7 +227,8 @@ class TrelloApi{
   }
 
   Future<void> deleteCards(String id) async {
-        final url = 'https://api.trello.com/1/cards/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
+    final url =
+        'https://api.trello.com/1/cards/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
     final response = await http.delete(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -209,6 +237,4 @@ class TrelloApi{
       throw Exception('Failed to delete card: ${response.statusCode}');
     }
   }
-
-
 }
