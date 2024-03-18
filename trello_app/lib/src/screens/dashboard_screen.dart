@@ -3,6 +3,7 @@ import 'package:trello_app/src/components/custom_navigation_bar.dart';
 import 'package:trello_app/src/components/custom_app_bar.dart';
 import 'package:trello_app/src/screens/account_screen.dart';
 import 'package:trello_app/src/screens/boards_screen.dart';
+import 'package:trello_app/src/screens/search_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -13,9 +14,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
   List<Widget> _widgetOptions() => [
-        DashboardContent(), // Ici, tu utilises le widget DashboardContent pour la page d'accueil
+        DashboardContent(),
         BoardScreen(),
-        Center(child: Text('Recherchez')),
+        SearchScreen(),
         Center(child: Text('Notifications')),
         AccountScreen(),
       ];

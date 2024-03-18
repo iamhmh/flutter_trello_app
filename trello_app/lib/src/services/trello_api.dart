@@ -8,8 +8,8 @@ import 'package:trello_app/src/models/card.dart';
 import 'package:trello_app/src/utils/constants.dart';
 
 class TrelloApi {
-  //Workspaces
 
+  //Workspaces
   Future<List<Workspace>> getWorkspaces() async {
     final response = await http.get(
       Uri.parse(

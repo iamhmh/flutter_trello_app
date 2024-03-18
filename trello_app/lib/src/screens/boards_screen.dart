@@ -20,38 +20,56 @@ class _BoardScreenState extends State<BoardScreen> {
     _loadWorkspaces();
   }
 
-Future<void> _loadWorkspaces() async {
-  setState(() {
-    _isLoading = true;
-  });
-  try {
-    final workspaces = await _trelloApi.getWorkspaces();
+  Future<void> _loadWorkspaces() async {
     setState(() {
-      _workspaces = workspaces;
+      _isLoading = true;
     });
-  } catch (e) {
-    print(e);
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      final workspaces = await _trelloApi.getWorkspaces();
+      setState(() {
+        _workspaces = workspaces;
+      });
+    } catch (e) {
+      print(e);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
-
 
   Future<void> _createWorkspace() async {
     if (_workspaceNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Le nom du workspace ne peut pas être vide.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Le nom du workspace ne peut pas être vide.")));
       return;
     }
     try {
-      final newWorkspace = await _trelloApi.createWorkspace(_workspaceNameController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Workspace créé : ${newWorkspace.name}')));
+      final newWorkspace = await _trelloApi
+          .createWorkspace(_workspaceNameController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Workspace créé : ${newWorkspace.name}')));
       _workspaceNameController.clear();
       _loadWorkspaces(); // Recharger les workspaces pour inclure le nouveau
     } catch (e) {
       print(e);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de la création du workspace. Vérifiez votre connexion et les détails de l'API.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "Erreur lors de la création du workspace. Vérifiez votre connexion et les détails de l'API.")));
+    }
+  }
+
+  Future<void> _deleteWorkspace(String idWorkspace) async {
+    try {
+      await _trelloApi.deleteWorkspace(idWorkspace);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Workspace supprimé')));
+      _loadWorkspaces(); // Recharger la liste des workspaces après la suppression
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "Erreur lors de la suppression du workspace. Vérifiez votre connexion et les détails de l'API.")));
     }
   }
 
@@ -63,8 +81,8 @@ Future<void> _loadWorkspaces() async {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-                controller: _workspaceNameController,
-                decoration: InputDecoration(
+              controller: _workspaceNameController,
+              decoration: InputDecoration(
                 labelText: 'Nom du nouveau workspace',
                 suffixIcon: IconButton(
                   icon: Icon(Icons.add),
@@ -89,10 +107,15 @@ Future<void> _loadWorkspaces() async {
                 : ListView.builder(
                     itemCount: _workspaces.length,
                     itemBuilder: (context, index) {
+                      final workspace = _workspaces[index];
                       return Card(
                         child: ListTile(
-                          title: Text(_workspaces[index].name),
+                          title: Text(workspace.name),
                           leading: Icon(Icons.dashboard),
+                          trailing: IconButton(
+                            icon: Icon(Icons.close),
+                            onPressed: () => _deleteWorkspace(workspace.id),
+                          ),
                           onTap: () {
                             // Action lors du clic sur un tableau
                           },
