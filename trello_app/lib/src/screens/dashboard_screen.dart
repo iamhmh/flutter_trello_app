@@ -67,7 +67,7 @@ class DashboardContent extends StatelessWidget {
           ),
           SizedBox(height: 10),
           Text(
-            "Commencez par créer votre tableau et vos tâches.",
+            "Commencez par créer votre workspace et vos boards.",
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 20),
@@ -76,7 +76,7 @@ class DashboardContent extends StatelessWidget {
               // Implémente la logique de création de tableau ici
             },
             child: Text(
-              "Créer votre premier tableau",
+              "Créer votre premier workspace",
               style: TextStyle(fontSize: 12, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(

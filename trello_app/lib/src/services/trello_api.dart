@@ -8,7 +8,6 @@ import 'package:trello_app/src/models/card.dart';
 import 'package:trello_app/src/utils/constants.dart';
 
 class TrelloApi {
-
   //Workspaces
   Future<List<Workspace>> getWorkspaces() async {
     final response = await http.get(
@@ -78,27 +77,33 @@ class TrelloApi {
 
   //Boards
 
-  Future<List<Board>> getBoards(String idBoard) async {
+  Future<List<Board>> getBoards(String idOrganization) async {
     final response = await http.get(
       Uri.parse(
-          'https://api.trello.com/1/boards/${idBoard}?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+        'https://api.trello.com/1/organizations/$idOrganization/boards?key=${Constants.apiKey}&token=${Constants.apiToken}',
+      ),
     );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body) as List;
+      final List<dynamic> jsonData = jsonDecode(response.body);
       return jsonData.map((data) => Board.fromJson(data)).toList();
     } else {
       throw Exception('Failed to get boards: ${response.statusCode}');
     }
   }
 
-  Future<Board> createBoard(String name) async {
-    final url =
-        'https://api.trello.com/1/boards?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.post(Uri.parse(url));
+
+  Future<Board> createBoard(String workspaceId, String name) async {
+    final response = await http.post(
+      Uri.parse('https://api.trello.com/1/boards/?name=$name&idOrganization=$workspaceId&key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+      final jsonData = jsonDecode(response.body);
       return Board.fromJson(jsonData);
     } else {
       throw Exception('Failed to create board: ${response.statusCode}');

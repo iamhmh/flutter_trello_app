@@ -11,7 +11,9 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Color(0xfff57b51),
+      child: Center(
+        child: Text('Search Screen'),
+      ),
     );
   }
 }
