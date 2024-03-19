@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:trello_app/src/models/workspace.dart';
-import 'package:trello_app/src/services/trello_api.dart'; // Assurez-vous que ce soit le bon chemin d'accès
-import 'package:trello_app/src/models/board.dart'; // Assurez-vous que ce soit le bon chemin d'accès
+import 'package:trello_app/src/services/trello_api.dart';
+import 'package:trello_app/src/models/board.dart';
+import 'package:trello_app/src/screens/boardsDetails_screen.dart';
 
 class WorkspaceDetailScreen extends StatefulWidget {
   final Workspace workspace;
@@ -143,24 +144,19 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
           title: Text('Confirmation'),
           content: Text('Voulez-vous vraiment supprimer ce board ?'),
           actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+            TextButton(child: Text('Annuler'), onPressed: () => Navigator.of(context).pop()),
             TextButton(
               child: Text('Supprimer'),
               onPressed: () async {
                 try {
                   await _trelloApi.deleteBoard(boardId);
-                  Navigator.of(context)
-                      .pop(); // Fermer la boîte de dialogue après la suppression
-                  _loadBoards(); // Recharger la liste des boards pour afficher les changements
+                  setState(() {
+                    _boards.removeWhere((board) => board.id == boardId);
+                  });
+                  Navigator.of(context).pop();
                 } catch (error) {
                   print(error);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Erreur lors de la suppression du board')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la suppression du board')));
                 }
               },
             ),
@@ -264,7 +260,9 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                               ],
                             ),
                             onTap: () {
-                              // Logique pour ouvrir le board et afficher ses détails ou listes
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => BoardDetailScreen(board: board),
+                              ));
                             },
                           ),
                         );

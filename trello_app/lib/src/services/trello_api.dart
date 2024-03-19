@@ -137,10 +137,11 @@ class TrelloApi {
 
   //Lists
 
-  Future<List<Lists>> getLists(String idLists) async {
+  Future<List<Lists>> getLists(String boardId) async {
     final response = await http.get(
       Uri.parse(
-          'https://api.trello.com/1/lists/$idLists?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+        'https://api.trello.com/1/boards/$boardId/lists?key=${Constants.apiKey}&token=${Constants.apiToken}',
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -151,16 +152,18 @@ class TrelloApi {
     }
   }
 
-  Future<Lists> createLists(String name) async {
-    final url =
-        'https://api.trello.com/1/lists?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.post(Uri.parse(url));
+  Future<Lists> createLists(String boardId, String name) async {
+    final url = Uri.parse('https://api.trello.com/1/lists?name=$name&idBoard=$boardId&key=${Constants.apiKey}&token=${Constants.apiToken}');
+    final response = await http.post(url, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    });
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
       return Lists.fromJson(jsonData);
     } else {
-      throw Exception('Failed to create lists: ${response.statusCode}');
+      throw Exception('Failed to create list: ${response.statusCode}');
     }
   }
 
@@ -177,15 +180,23 @@ class TrelloApi {
     }
   }
 
-  Future<void> deleteLists(String id) async {
-    final url =
-        'https://api.trello.com/1/lists/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.delete(Uri.parse(url));
+  Future<void> archiveList(String listId, bool value) async {
+    final url = Uri.parse('https://api.trello.com/1/lists/$listId/closed?key=${Constants.apiKey}&token=${Constants.apiToken}');
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'value': value,
+      }),
+    );
 
     if (response.statusCode == 200) {
-      print('List deleted successfully.');
+      print('List successfully archived.');
     } else {
-      throw Exception('Failed to delete list: ${response.statusCode}');
+      throw Exception('Failed to archive list: ${response.statusCode}');
     }
   }
 

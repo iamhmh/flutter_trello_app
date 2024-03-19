@@ -10,4 +10,6 @@ class Lists {
       name: json['name'],
     );
   }
+
+  get cards => null;
 }
