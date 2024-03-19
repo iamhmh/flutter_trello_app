@@ -92,10 +92,9 @@ class TrelloApi {
     }
   }
 
-
-  Future<Board> createBoard(String workspaceId, String name) async {
+  Future<Board> createBoard(String workspaceId, String name, {bool defaultLists = true}) async {
     final response = await http.post(
-      Uri.parse('https://api.trello.com/1/boards/?name=$name&idOrganization=$workspaceId&key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      Uri.parse('https://api.trello.com/1/boards/?name=$name&idOrganization=$workspaceId&defaultLists=$defaultLists&key=${Constants.apiKey}&token=${Constants.apiToken}'),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -202,54 +201,58 @@ class TrelloApi {
 
   //Cards
 
-  Future<List<Card>> getCards(String idCards) async {
+  Future<List<Cards>> getCards(String listId) async {
     final response = await http.get(
-      Uri.parse(
-          'https://api.trello.com/1/cards/$idCards?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      Uri.parse('https://api.trello.com/1/lists/$listId/cards?key=${Constants.apiKey}&token=${Constants.apiToken}'),
     );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body) as List;
-      return jsonData.map((data) => Card.fromJson(data)).toList();
+      final List<dynamic> jsonData = jsonDecode(response.body);
+      return jsonData.map((data) => Cards.fromJson(data)).toList();
     } else {
       throw Exception('Failed to get cards: ${response.statusCode}');
     }
   }
 
-  Future<Card> createCards(String name) async {
-    final url =
-        'https://api.trello.com/1/cards?name=$name&key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.post(Uri.parse(url));
+  Future<Cards> createCard(String listId, String name, {String? desc}) async {
+    final response = await http.post(
+      Uri.parse('https://api.trello.com/1/cards?name=$name&idList=$listId&desc=${desc ?? ""}&key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      headers: {'Accept': 'application/json'},
+    );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      return Card.fromJson(jsonData);
+      final jsonData = jsonDecode(response.body);
+      return Cards.fromJson(jsonData);
     } else {
-      throw Exception('Failed to create cards: ${response.statusCode}');
+      throw Exception('Failed to create card: ${response.statusCode}');
     }
   }
 
-  Future<Card> updateCards(String id, String newName) async {
-    final url =
-        'https://api.trello.com/1/cards/$id?name=$newName&key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.put(Uri.parse(url));
+  Future<Cards> updateCard(String cardId, {String? name, String? desc}) async {
+    final Map<String, dynamic> updates = {};
+    if (name != null) updates['name'] = name;
+    if (desc != null) updates['desc'] = desc;
+
+    final response = await http.put(
+      Uri.parse('https://api.trello.com/1/cards/$cardId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(updates),
+    );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      return Card.fromJson(jsonData);
+      final jsonData = jsonDecode(response.body);
+      return Cards.fromJson(jsonData);
     } else {
       throw Exception('Failed to update card: ${response.statusCode}');
     }
   }
 
-  Future<void> deleteCards(String id) async {
-    final url =
-        'https://api.trello.com/1/cards/$id?key=${Constants.apiKey}&token=${Constants.apiToken}';
-    final response = await http.delete(Uri.parse(url));
+  Future<void> deleteCard(String cardId) async {
+    final response = await http.delete(
+      Uri.parse('https://api.trello.com/1/cards/$cardId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
 
-    if (response.statusCode == 200) {
-      print('Card deleted successfully.');
-    } else {
+    if (response.statusCode != 200) {
       throw Exception('Failed to delete card: ${response.statusCode}');
     }
   }

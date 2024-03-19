@@ -40,53 +40,69 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
 
   Future<void> _promptCreateBoard() async {
     final TextEditingController _boardNameController = TextEditingController();
+    bool _defaultLists = true; // Par défaut, les listes seront créées
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Créer un nouveau board'),
-          content: TextField(
-            controller: _boardNameController,
-            decoration: InputDecoration(hintText: "Nom du board"),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Créer'),
-              onPressed: () async {
-                if (_boardNameController.text.isNotEmpty) {
-                  // Ici, vous créez le board en utilisant l'API
-                  try {
-                    final newBoard = await _trelloApi.createBoard(
-                        widget.workspace.id, _boardNameController.text.trim());
-                    Navigator.of(context)
-                        .pop(); // Fermer la boîte de dialogue après la création
-                    _loadBoards(); // Recharger la liste des boards pour afficher le nouveau board
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text('Board créé avec succès: ${newBoard.name}')));
-                  } catch (error) {
-                    print(error);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Erreur lors de la création du board')));
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Le nom du board ne peut pas être vide')));
-                }
-              },
-            ),
-          ],
+        return StatefulBuilder( // Utilisez StatefulBuilder pour mettre à jour l'état local dans le dialogue
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Créer un nouveau board'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min, // Pour éviter l'excès d'espace
+                children: [
+                  TextField(
+                    controller: _boardNameController,
+                    decoration: InputDecoration(hintText: "Nom du board"),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Tableau Kanban'),
+                      Checkbox(
+                        value: _defaultLists,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            _defaultLists = value!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Annuler'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('Créer'),
+                  onPressed: () async {
+                    if (_boardNameController.text.isNotEmpty) {
+                      try {
+                        final newBoard = await _trelloApi.createBoard(
+                            widget.workspace.id, _boardNameController.text.trim(),
+                            defaultLists: _defaultLists); // Passez le choix de l'utilisateur
+                        Navigator.of(context).pop(); // Fermer le dialogue
+                        _loadBoards(); // Recharger les tableaux
+                      } catch (error) {
+                        print(error);
+                      }
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
 
   Future<void> _editBoard(Board board) async {
     final TextEditingController _editNameController =

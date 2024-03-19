@@ -1,7 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_reorderable_list/flutter_reorderable_list.dart';
 import 'package:trello_app/src/models/board.dart';
 import 'package:trello_app/src/models/lists.dart';
+import 'package:trello_app/src/models/card.dart';
 import 'package:trello_app/src/services/trello_api.dart';
 
 class BoardDetailScreen extends StatefulWidget {
@@ -14,7 +16,8 @@ class BoardDetailScreen extends StatefulWidget {
 }
 
 class _BoardDetailScreenState extends State<BoardDetailScreen> {
-  List<Lists> _lists = []; 
+  List<Lists> _lists = [];
+  List<Cards> _cards = [];
   bool _isLoading = true;
   final TrelloApi _trelloApi = TrelloApi();
 
@@ -24,9 +27,14 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
     _loadLists();
   }
 
+
   Future<void> _loadLists() async {
     try {
       final lists = await _trelloApi.getLists(widget.board.id);
+      await Future.forEach(lists, (Lists list) async {
+        final cards = await _trelloApi.getCards(list.id);
+        list.cards = cards;
+      });
       setState(() {
         _lists = lists;
         _isLoading = false;
@@ -138,6 +146,142 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
     );
   }
 
+  Future<void> _promptCreateCard(String listId) async {
+    final TextEditingController _cardNameController = TextEditingController();
+    final TextEditingController _cardDescController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Créer une nouvelle carte'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _cardNameController,
+                decoration: InputDecoration(hintText: "Nom de la carte"),
+              ),
+              TextField(
+                controller: _cardDescController, // Champ pour la description
+                decoration: InputDecoration(hintText: "Description de la carte"),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Créer'),
+              onPressed: () async {
+                final cardName = _cardNameController.text.trim();
+                final cardDesc = _cardDescController.text.trim(); // Récupère la description
+                if (cardName.isNotEmpty) {
+                  try {
+                    final newCard = await _trelloApi.createCard(listId, cardName, desc: cardDesc);
+                    Navigator.of(context).pop();
+                    int index = _lists.indexWhere((lst) => lst.id == listId);
+                    if (index != -1) {
+                      setState(() {
+                        _lists[index].cards.add(newCard);
+                      });
+                    }
+                  } catch (error) {
+                    print(error);
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _promptUpdateCard(Cards card) async {
+    final TextEditingController _cardNameController = TextEditingController(text: card.name);
+    final TextEditingController _cardDescController = TextEditingController(text: card.desc ?? "");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Modifier la carte'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: _cardNameController, decoration: InputDecoration(hintText: "Nom de la carte")),
+              TextField(controller: _cardDescController, decoration: InputDecoration(hintText: "Description de la carte")),
+            ],
+          ),
+          actions: [
+            TextButton(child: Text('Annuler'), onPressed: () => Navigator.pop(context)),
+            TextButton(
+              child: Text('Enregistrer'),
+              onPressed: () async {
+                final newName = _cardNameController.text.trim();
+                final newDesc = _cardDescController.text.trim();
+                if (newName.isNotEmpty || newDesc.isNotEmpty) {
+                  try {
+                    final updatedCard = await _trelloApi.updateCard(card.id, name: newName, desc: newDesc);
+                    Navigator.pop(context);
+                    int listIndex = _lists.indexWhere((lst) => lst.cards.indexWhere((c) => c.id == updatedCard.id) != -1);
+                    if (listIndex != -1) {
+                      int cardIndex = _lists[listIndex].cards.indexWhere((c) => c.id == updatedCard.id);
+                      if (cardIndex != -1) {
+                        setState(() {
+                          _lists[listIndex].cards[cardIndex] = updatedCard;
+                        });
+                      }
+                    }
+                  } catch (error) {
+                    print(error);
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _promptDeleteCard(String cardId, String listId) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Supprimer la carte'),
+          content: Text('Êtes-vous sûr de vouloir supprimer cette carte ?'),
+          actions: [
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: Text('Supprimer'),
+              onPressed: () async {
+                try {
+                  await _trelloApi.deleteCard(cardId);
+                  setState(() {
+                    final listIndex = _lists.indexWhere((list) => list.id == listId);
+                    if (listIndex != -1) {
+                      _lists[listIndex].cards.removeWhere((card) => card.id == cardId);
+                    }
+                  });
+                  Navigator.pop(context);
+                } catch (error) {
+                  print(error);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,16 +299,20 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
       body: Stack(
         children: [
           Container(
-            color: Color(0xfff57b51), // Définit la couleur de fond de l'écran complet
+            color: Color(0xfff57b51),
           ),
           _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _buildLists(),
+              ? Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 5.0,
+                    runSpacing: 5.0,
+                    direction: Axis.horizontal,
+                    children: _buildLists(),
+                  ),
                 ),
-              ),
         ],
       ),
     );
@@ -172,53 +320,101 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
 
   List<Widget> _buildLists() {
     return _lists.map((list) {
-      var cards = list.cards ?? [];
       return Container(
         width: 300,
-        padding: EdgeInsets.all(10),
         margin: EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: Color(0xfffceee7),
           borderRadius: BorderRadius.circular(10),
         ),
-        height: cards.length * 50.0 + 150.0,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(list.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ),
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => _promptUpdateList(list),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () => _promptArchiveList(list.id),
-                ),
-              ],
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: cards.length,
-                itemBuilder: (context, index) {
-                  return ListTile(title: Text(cards[index].name));
-                },
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(list.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.edit, size: 20),
+                    onPressed: () => _promptUpdateList(list),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, size: 20),
+                    onPressed: () => _promptArchiveList(list.id),
+                  ),
+                ],
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                // Implémentez la logique pour ajouter une carte
-              },
+            list.cards.isEmpty
+                ? Container(
+                    padding: EdgeInsets.all(10),
+                    child: Text("Pas de cartes", style: TextStyle(color: Colors.grey)),
+                  )
+                : Column(
+                    children: list.cards.map((card) {
+                      return Container(
+                        padding: EdgeInsets.all(8),
+                        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    card.name,
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.edit, size: 20),
+                                  onPressed: () => _promptUpdateCard(card),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, size: 20),
+                                  onPressed: () => _promptDeleteCard(card.id, list.id),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(top: 4),
+                              child: Text(
+                                card.desc ?? "Pas de description",
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () => _promptCreateCard(list.id),
+              ),
             ),
           ],
         ),
       );
     }).toList();
   }
-
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadLists();
+  }
 
 }

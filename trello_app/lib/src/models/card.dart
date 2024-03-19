@@ -1,13 +1,15 @@
-class Card {
+class Cards {
   final String id;
   final String name;
+  final String? desc;
 
-  Card({required this.id, required this.name});
+  Cards({required this.id, required this.name, this.desc});
 
-  factory Card.fromJson(Map<String, dynamic> json) {
-    return Card(
+  factory Cards.fromJson(Map<String, dynamic> json) {
+    return Cards(
       id: json['id'],
       name: json['name'],
+      desc: json['desc'],
     );
   }
 }
