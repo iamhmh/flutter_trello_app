@@ -14,13 +14,14 @@ class WorkspaceDetailScreen extends StatefulWidget {
 }
 
 class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
+  
   final TrelloApi _trelloApi = TrelloApi();
   List<Board> _boards = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
     _loadBoards();
   }
@@ -102,7 +103,6 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
       },
     );
   }
-
 
   Future<void> _editBoard(Board board) async {
     final TextEditingController _editNameController =

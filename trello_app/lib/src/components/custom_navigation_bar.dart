@@ -14,37 +14,53 @@ class CustomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(10),
-        topRight: Radius.circular(10),
+        topLeft: Radius.circular(15),
+        topRight: Radius.circular(15),
       ),
       child: NavigationBar(
+        indicatorColor: Color(0xfffceee7),
         selectedIndex: selectedIndex,
         onDestinationSelected: onItemTapped,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         backgroundColor: Color(0xfff57b51),
         destinations: const <NavigationDestination>[
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
+            icon: Icon(
+              Icons.home_outlined,
+              color: Color(0xfffceee7),
+              ),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
+            icon: Icon(
+              Icons.dashboard_outlined,
+              color: Color(0xfffceee7),
+              ),
             selectedIcon: Icon(Icons.dashboard),
-            label: 'Boards',
+            label: 'Workspaces',
           ),
           NavigationDestination(
-            icon: Icon(Icons.search_outlined),
+            icon: Icon(
+              Icons.search_outlined,
+              color: Color(0xfffceee7),
+            ),
             selectedIcon: Icon(Icons.search),
             label: 'Search',
           ),
           NavigationDestination(
-            icon: Icon(Icons.notifications_outlined),
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: Color(0xfffceee7),
+            ),
             selectedIcon: Icon(Icons.notifications),
-            label: 'Notifications',
+            label: 'Alerts',
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_circle_outlined),
+            icon: Icon(
+              Icons.account_circle_outlined,
+              color: Color(0xfffceee7),
+            ),
             selectedIcon: Icon(Icons.account_circle),
             label: 'Account',
           ),

@@ -190,83 +190,83 @@ class _BoardScreenState extends State<BoardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3, // Prend les 3/4 de l'espace
-                  child: TextField(
-                    controller: _workspaceNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Rechercher un workspace',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    onChanged: (value) => _filterWorkspaces(value),
-                  ),
-                ),
-                SizedBox(width: 8), // Espacement entre le champ de texte et le bouton
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () => _promptCreateWorkspace(),
-                  tooltip: 'Créer un nouveau workspace',
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Vos espaces de travail',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _workspaces.length,
-                    itemBuilder: (context, index) {
-                      final workspace = _workspaces[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(workspace.name),
-                          leading: Icon(Icons.dashboard),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit),
-                                onPressed: () => _showEditDialog(
-                                    workspace.id, workspace.name),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.close),
-                                onPressed: () => _confirmAndDeleteWorkspace(workspace.id),
-                              ),
-                            ],
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => WorkspaceDetailScreen(
-                                  workspace: workspace,
-                                )
-                              ),
-                            );
-                          },
-
+      body: Container(
+        color: Color(0xfffceee7),// Définir la couleur de fond ici
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: _workspaceNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Search a workspace',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      );
-                    },
+                      ),
+                      onChanged: (value) => _filterWorkspaces(value),
+                    ),
                   ),
-          ),
-        ],
+                  SizedBox(width: 8), // Espacement entre le champ de texte et le bouton
+                  IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () => _promptCreateWorkspace(),
+                    tooltip: 'Create a new workspace',
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Your workspaces',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _workspaces.length,
+                      itemBuilder: (context, index) {
+                        final workspace = _workspaces[index];
+                        return Card(
+                          color: Colors.white,
+                          child: ListTile(
+                            title: Text(workspace.name),
+                            leading: Icon(Icons.dashboard),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit),
+                                  onPressed: () => _showEditDialog(workspace.id, workspace.name),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close),
+                                  onPressed: () => _confirmAndDeleteWorkspace(workspace.id),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => WorkspaceDetailScreen(workspace: workspace),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

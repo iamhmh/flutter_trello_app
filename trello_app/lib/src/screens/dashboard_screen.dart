@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trello_app/src/components/custom_navigation_bar.dart';
 import 'package:trello_app/src/components/custom_app_bar.dart';
 import 'package:trello_app/src/screens/account_screen.dart';
+import 'package:trello_app/src/screens/alerts_screen.dart';
 import 'package:trello_app/src/screens/boards_screen.dart';
 import 'package:trello_app/src/screens/search_screen.dart';
 
@@ -17,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         DashboardContent(),
         BoardScreen(),
         SearchScreen(),
-        Center(child: Text('Notifications')),
+        AlertsScreen(),
         AccountScreen(),
       ];
 
@@ -42,12 +43,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class DashboardContent extends StatelessWidget {
   final String userName =
-      "<nom>"; // Adapte cette partie selon ton cas d'utilisation
+      "<username>";
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey[200], // Couleur de fond
+      color: Color(0xfffceee7),
       width: double.infinity,
       padding: EdgeInsets.all(20),
       child: Column(
@@ -62,21 +63,21 @@ class DashboardContent extends StatelessWidget {
           ),
           SizedBox(height: 20),
           Text(
-            "Bonjour, $userName",
+            "Hi, $userName",
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 10),
           Text(
-            "Commencez par créer votre workspace et vos boards.",
+            "Start by creating your workspace and boards.",
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              // Implémente la logique de création de tableau ici
+              Navigator.pushNamed(context, '/create-workspace');
             },
             child: Text(
-              "Créer votre premier workspace",
+              "Create your first workspace",
               style: TextStyle(fontSize: 12, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(

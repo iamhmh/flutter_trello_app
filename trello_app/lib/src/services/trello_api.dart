@@ -1,10 +1,10 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 import 'package:trello_app/src/models/board.dart';
 import 'package:trello_app/src/models/workspace.dart';
 import 'package:trello_app/src/models/lists.dart';
 import 'package:trello_app/src/models/card.dart';
+import 'package:trello_app/src/models/member.dart';
 import 'package:trello_app/src/utils/constants.dart';
 
 class TrelloApi {
@@ -254,6 +254,53 @@ class TrelloApi {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to delete card: ${response.statusCode}');
+    }
+  }
+
+  //Members
+
+  Future<Member> getMemberInfo(String token) async {
+    final url = Uri.parse('https://api.trello.com/1/tokens/$token/member?key=${Constants.apiKey}&token=${Constants.apiToken}');
+    final response = await http.get(url, headers: {'Accept': 'application/json'});
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      return Member.fromJson(jsonData);
+    } else {
+      throw Exception('Failed to get member info: ${response.statusCode}');
+    }
+  }
+
+  Future<List<Member>> getMembers(String boardId) async {
+    final response = await http.get(
+      Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = jsonDecode(response.body);
+      return jsonData.map((data) => Member.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to get members: ${response.statusCode}');
+    }
+  }
+
+  Future<void> addMemberToBoard(String boardId, String memberId) async {
+    final response = await http.post(
+      Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}&value=$memberId'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add member to board: ${response.statusCode}');
+    }
+  }
+
+  Future<void> removeMemberFromBoard(String boardId, String memberId) async {
+    final response = await http.delete(
+      Uri.parse('https://api.trello.com/1/boards/$boardId/members/$memberId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove member from board: ${response.statusCode}');
     }
   }
 }
