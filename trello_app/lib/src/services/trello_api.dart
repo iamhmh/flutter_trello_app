@@ -228,10 +228,11 @@ class TrelloApi {
     }
   }
 
-  Future<Cards> updateCard(String cardId, {String? name, String? desc}) async {
+  Future<Cards> updateCard(String cardId, {String? name, String? desc, String? listId}) async {
     final Map<String, dynamic> updates = {};
     if (name != null) updates['name'] = name;
     if (desc != null) updates['desc'] = desc;
+    if (listId != null) updates['idList'] = listId;
 
     final response = await http.put(
       Uri.parse('https://api.trello.com/1/cards/$cardId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
@@ -264,6 +265,7 @@ class TrelloApi {
     final response = await http.get(url, headers: {'Accept': 'application/json'});
 
     if (response.statusCode == 200) {
+      print("Response body: ${response.body}");
       final jsonData = jsonDecode(response.body);
       return Member.fromJson(jsonData);
     } else {

@@ -21,7 +21,7 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     _loadBoards();
   }

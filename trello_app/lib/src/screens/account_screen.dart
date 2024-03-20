@@ -48,9 +48,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Object imageProvider = user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
-        ? NetworkImage(user!.avatarUrl)
-        : AssetImage("assets/images/utilisateur.png");
+
+    ImageProvider<Object> imageProvider;
+    if (user?.avatarUrl != null && user!.avatarUrl.isNotEmpty) {
+      String modifiedAvatarUrl = "${user!.avatarUrl}/50.png";
+      imageProvider = NetworkImage(modifiedAvatarUrl);
+    } else {
+      imageProvider = AssetImage("assets/images/utilisateur.png");
+    }
 
     return Scaffold(
       body: isLoading
@@ -67,14 +72,14 @@ class _AccountScreenState extends State<AccountScreen> {
                       children: [
                         CircleAvatar(
                           radius: 40,
-                          backgroundImage: imageProvider as ImageProvider<Object>?,
+                          backgroundImage: imageProvider,
                           backgroundColor: Colors.transparent,
                           onBackgroundImageError: (exception, stackTrace) {
                             print("Failed to load user avatar: $exception");
                           },
                         ),
                         SizedBox(height: 10),
-                        Text(user?.fullName ?? 'Nom d\'utilisateur', style: TextStyle(fontSize: 20, color: Colors.white)),
+                        Text(user?.username ?? 'Nom d\'utilisateur', style: TextStyle(fontSize: 20, color: Colors.white)),
                         Text(user?.email ?? 'email@example.com', style: TextStyle(fontSize: 15, color: Colors.white70)),
                       ],
                     ),

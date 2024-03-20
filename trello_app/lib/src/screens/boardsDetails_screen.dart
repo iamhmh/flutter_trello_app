@@ -1,10 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:trello_app/src/models/board.dart';
 import 'package:trello_app/src/models/lists.dart';
 import 'package:trello_app/src/models/card.dart';
 import 'package:trello_app/src/services/trello_api.dart';
+import 'package:trello_app/src/widgets/card_widget.dart';
 
 class BoardDetailScreen extends StatefulWidget {
   final Board board;
@@ -283,6 +282,15 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
     );
   }
 
+  Future<void> _moveCardToList(Cards card, String newListId) async {
+    try {
+      final updatedCard = await _trelloApi.updateCard(card.id, listId: newListId);
+      _loadLists();
+    } catch (error) {
+      print(error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -320,92 +328,71 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
 
   List<Widget> _buildLists() {
     return _lists.map((list) {
-      return Container(
-        width: 300,
-        margin: EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: Color(0xfffceee7),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.all(10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(list.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit, size: 20),
-                    onPressed: () => _promptUpdateList(list),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete, size: 20),
-                    onPressed: () => _promptArchiveList(list.id),
-                  ),
-                ],
+      return DragTarget<Cards>(
+        onWillAccept: (data) => true,
+        onAccept: (data) {
+          _moveCardToList(data, list.id);
+        },
+        builder: (context, candidateData, rejectedData) => Container(
+          width: 300,
+          margin: EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Color(0xfffceee7),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.all(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(list.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, size: 20),
+                      onPressed: () => _promptUpdateList(list),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, size: 20),
+                      onPressed: () => _promptArchiveList(list.id),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            list.cards.isEmpty
-                ? Container(
-                    padding: EdgeInsets.all(10),
-                    child: Text("Pas de cartes", style: TextStyle(color: Colors.grey)),
-                  )
-                : Column(
-                    children: list.cards.map((card) {
-                      return Container(
-                        padding: EdgeInsets.all(8),
-                        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    card.name,
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.edit, size: 20),
-                                  onPressed: () => _promptUpdateCard(card),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, size: 20),
-                                  onPressed: () => _promptDeleteCard(card.id, list.id),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 4),
-                              child: Text(
-                                card.desc ?? "Pas de description",
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () => _promptCreateCard(list.id),
+              list.cards.isEmpty
+                  ? Container(
+                      padding: EdgeInsets.all(10),
+                      child: Text("Pas de cartes", style: TextStyle(color: Colors.grey)),
+                    )
+                  : Column(
+                      children: list.cards.map((card) {
+                        return Draggable<Cards>(
+                          data: card,
+                          child: CardWidget(
+                            card: card,
+                            onUpdate: () => _promptUpdateCard(card),
+                            onDelete: () => _promptDeleteCard(card.id, list.id),
+                          ),
+                          feedback: Material(
+                            child: CardWidget(card: card, onUpdate: () {}, onDelete: () {}),
+                            elevation: 4.0,
+                          ),
+                          childWhenDragging: Container(),
+                        );
+                      }).toList(),
+                    ),
+              Center(
+                child: IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _promptCreateCard(list.id),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }).toList();

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:trello_app/src/components/custom_app_bar.dart';
+import 'package:trello_app/src/components/custom_navigation_bar.dart';
 import 'package:trello_app/src/services/trello_api.dart'; // Assurez-vous que le chemin d'accès est correct
 import 'package:trello_app/src/models/workspace.dart';
 import 'package:trello_app/src/screens/workspaceDetails_screen.dart'; 
 
 class BoardScreen extends StatefulWidget {
+  final bool shouldOpenCreateWorkspace;
+
+  BoardScreen({this.shouldOpenCreateWorkspace = true});
+
   @override
   _BoardScreenState createState() => _BoardScreenState();
 }
@@ -12,13 +18,16 @@ class _BoardScreenState extends State<BoardScreen> {
   final TrelloApi _trelloApi = TrelloApi();
   List<Workspace> _workspaces = [];
   bool _isLoading = true;
-  final TextEditingController _workspaceNameController =
-      TextEditingController();
+  final TextEditingController _workspaceNameController = TextEditingController();
 
-  @override
+@override
   void initState() {
     super.initState();
     _loadWorkspaces();
+    
+    if (widget.shouldOpenCreateWorkspace) {
+      WidgetsBinding.instance!.addPostFrameCallback((_) => _promptCreateWorkspace());
+    }
   }
 
   Future<void> _loadWorkspaces() async {
