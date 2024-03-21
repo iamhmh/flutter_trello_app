@@ -289,7 +289,6 @@ class TrelloApi {
     }
   }
 
-
   Future<void> inviteToOrganization(String organizationId, String email) async {
     final url = Uri.parse('https://api.trello.com/1/organizations/$organizationId/members?email=$email&key=${Constants.apiKey}&token=${Constants.apiToken}');
     
@@ -326,4 +325,14 @@ class TrelloApi {
     }
   }
 
+  Future<void> assignMemberToBoard(String boardId, String memberId) async {
+    final url = Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}&idMember=$memberId&type=normal');
+    final response = await http.put(url);
+
+    if (response.statusCode == 200) {
+      print('Member successfully assigned to board.');
+    } else {
+      throw Exception('Failed to assign member to board: ${response.statusCode}');
+    }
+  }
 }

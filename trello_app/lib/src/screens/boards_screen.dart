@@ -137,68 +137,101 @@ class _BoardScreenState extends State<BoardScreen> {
   }
 
   Future<void> _showEditDialog(String idWorkspace, String currentName) async {
-  TextEditingController _editNameController = TextEditingController(text: currentName);
-  List<Member> members = [];
+    TextEditingController _editNameController = TextEditingController(text: currentName);
+    List<Member> members = [];
 
-  try {
-    members = await _trelloApi.getMembersOfOrganisation(idWorkspace);
-  } catch (e) {
-    print("Erreur lors de la récupération des membres: $e");
+    try {
+      members = await _trelloApi.getMembersOfOrganisation(idWorkspace);
+    } catch (e) {
+      print("Erreur lors de la récupération des membres: $e");
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Modifier le workspace'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  controller: _editNameController,
+                  decoration: InputDecoration(hintText: "Nouveau nom du workspace"),
+                ),
+                // Liste des membres pour suppression
+                for (var member in members)
+                  ListTile(
+                    title: Text(member.fullName),
+                    subtitle: Text(member.email ?? 'Pas d\'email'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () async {
+                        // Ici, vous intégrez le code de confirmation
+                        bool confirm = await _showConfirmationDialog(
+                          context,
+                          'Confirmation de suppression',
+                          'Voulez-vous vraiment supprimer ce membre ?',
+                        );
+
+                        if (confirm) {
+                          await _trelloApi.removeMemberFromOrganization(idWorkspace, member.id);
+                          Navigator.of(context).pop(); // Fermer la boîte de dialogue après suppression
+                          _loadWorkspaces(); // Recharger les workspaces pour refléter les changements
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Membre supprimé avec succès')));
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Enregistrer'),
+              onPressed: () async {
+                if (_editNameController.text.isNotEmpty) {
+                  await _trelloApi.updateWorkspace(idWorkspace, _editNameController.text.trim());
+                  Navigator.of(context).pop();
+                  _loadWorkspaces(); // Recharger les workspaces après la mise à jour
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Modifier le workspace'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: _editNameController,
-                decoration: InputDecoration(hintText: "Nouveau nom du workspace"),
-              ),
-              // Liste des membres pour suppression
-              for (var member in members)
-                ListTile(
-                  title: Text(member.fullName),
-                  subtitle: Text(member.email ?? 'Pas d\'email'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () async {
-                      await _trelloApi.removeMemberFromOrganization(idWorkspace, member.id);
-                      Navigator.of(context).pop(); // Fermer la boîte de dialogue après suppression
-                      _loadWorkspaces(); // Recharger les workspaces pour refléter les changements
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Annuler'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Enregistrer'),
-            onPressed: () async {
-              if (_editNameController.text.isNotEmpty) {
-                await _trelloApi.updateWorkspace(idWorkspace, _editNameController.text.trim());
-                Navigator.of(context).pop();
-                _loadWorkspaces(); // Recharger les workspaces après la mise à jour
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
+
+  Future<bool> _showConfirmationDialog(BuildContext context, String title, String message) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: Text('Supprimer'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
 
 
   Future<void> _promptCreateWorkspace() async {

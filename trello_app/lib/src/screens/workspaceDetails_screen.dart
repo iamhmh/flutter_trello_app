@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trello_app/src/models/member.dart';
 import 'package:trello_app/src/models/workspace.dart';
 import 'package:trello_app/src/services/trello_api.dart';
 import 'package:trello_app/src/models/board.dart';
@@ -19,11 +20,28 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
   List<Board> _boards = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
+  List<Member> _members = [];
 
   @override
   void initState() {
     super.initState();
     _loadBoards();
+    _loadMembers();
+  }
+
+  Future<void> _loadMembers() async {
+    setState(() {
+      widget.workspace.membersCount = 0;
+    });
+    try {
+      List<Member> members = await _trelloApi.getMembersOfOrganisation(widget.workspace.id);
+      setState(() {
+        widget.workspace.membersCount = members.length;
+        _members = members;
+      });
+    } catch (e) {
+      print("Erreur lors du chargement des membres: $e");
+    }
   }
 
   Future<void> _loadBoards() async {
@@ -198,6 +216,34 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
     });
   }
 
+  Future<void> _promptAssignMemberToBoard(Member member) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Assigner un membre à un board'),
+          content: Text('Voulez-vous vraiment assigner ${member.fullName} à un board ?'),
+          actions: <Widget>[
+            TextButton(child: Text('Annuler'), onPressed: () => Navigator.of(context).pop()),
+            TextButton(
+              child: Text('Assigner'),
+              onPressed: () async {
+                try {
+                  await _trelloApi.assignMemberToBoard(member.id, _boards.first.id);
+                  Navigator.of(context).pop();
+                } catch (error) {
+                  print(error);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de l\'assignation du membre au board')));
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -250,6 +296,53 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                 },
               ),
             ),
+            SizedBox(height: 10),
+            Text(
+              'Member(s) (${widget.workspace.membersCount})',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 5),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 6.0), // Assurez-vous que ce conteneur est aligné avec les autres éléments
+              decoration: BoxDecoration(
+                color: Color(0xfffceee7),
+                borderRadius: BorderRadius.circular(20), // Bords arrondis
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    spreadRadius: 0,
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(), 
+                    itemCount: _members.length,
+                    itemBuilder: (context, index) {
+                      final member = _members[index];
+                      return ListTile(
+                        title: Text(member.fullName),
+                        subtitle: Text(member.email ?? 'Pas d\'email'),
+                        trailing: IconButton(
+                          icon: Icon(Icons.playlist_add),
+                          onPressed: () => _promptAssignMemberToBoard(member),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10), // Ajoute un espace entre les éléments (équivalent à margin-bottom en CSS
+            Text(
+              'Boards (${_boards.length})',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 5),
             Expanded(
               child: _isLoading
                   ? Center(child: CircularProgressIndicator())
