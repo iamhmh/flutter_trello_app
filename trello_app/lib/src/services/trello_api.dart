@@ -273,9 +273,12 @@ class TrelloApi {
     }
   }
 
-  Future<List<Member>> getMembers(String boardId) async {
+  Future<List<Member>> getMembersOfOrganisation(String organizationId) async {
     final response = await http.get(
-      Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      Uri.parse('https://api.trello.com/1/organizations/$organizationId/members?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      headers: {
+        'Accept': 'application/json',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -286,23 +289,41 @@ class TrelloApi {
     }
   }
 
-  Future<void> addMemberToBoard(String boardId, String memberId) async {
-    final response = await http.post(
-      Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}&value=$memberId'),
-    );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to add member to board: ${response.statusCode}');
+  Future<void> inviteToOrganization(String organizationId, String email) async {
+    final url = Uri.parse('https://api.trello.com/1/organizations/$organizationId/members?email=$email&key=${Constants.apiKey}&token=${Constants.apiToken}');
+    
+    final response = await http.put(url);
+    
+    if (response.statusCode == 200) {
+      print('Invitation envoyée avec succès');
+    } else {
+      throw Exception('Erreur lors de l\'envoi de l\'invitation : ${response.statusCode}');
+    }
+  }
+  
+  Future<int> getMembershipsOfOrganization(String organizationId) async {
+    final url = Uri.parse('https://api.trello.com/1/organizations/$organizationId/memberships?key=${Constants.apiKey}&token=${Constants.apiToken}');
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = jsonDecode(response.body);
+      return jsonData.length;
+    } else {
+      throw Exception('Erreur lors de la récupération des membres : ${response.statusCode}');
     }
   }
 
-  Future<void> removeMemberFromBoard(String boardId, String memberId) async {
-    final response = await http.delete(
-      Uri.parse('https://api.trello.com/1/boards/$boardId/members/$memberId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
-    );
+  Future<void> removeMemberFromOrganization(String organizationId, String memberId) async {
+    final url = Uri.parse('https://api.trello.com/1/organizations/$organizationId/members/$memberId?key=${Constants.apiKey}&token=${Constants.apiToken}');
+    final response = await http.delete(url);
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to remove member from board: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      print('Member successfully removed from organization.');
+    } else {
+      throw Exception('Failed to remove member from organization: ${response.statusCode}');
     }
   }
+
 }

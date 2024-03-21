@@ -34,10 +34,10 @@ class CustomNavigationBar extends StatelessWidget {
           ),
           NavigationDestination(
             icon: Icon(
-              Icons.dashboard_outlined,
+              Icons.space_dashboard_outlined,
               color: Color(0xfffceee7),
               ),
-            selectedIcon: Icon(Icons.dashboard),
+            selectedIcon: Icon(Icons.space_dashboard),
             label: 'Workspaces',
           ),
           NavigationDestination(

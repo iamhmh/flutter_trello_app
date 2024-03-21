@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trello_app/src/components/custom_app_bar.dart';
 import 'package:trello_app/src/components/custom_navigation_bar.dart';
+import 'package:trello_app/src/models/member.dart';
 import 'package:trello_app/src/services/trello_api.dart'; // Assurez-vous que le chemin d'accès est correct
 import 'package:trello_app/src/models/workspace.dart';
 import 'package:trello_app/src/screens/workspaceDetails_screen.dart'; 
@@ -31,22 +32,28 @@ class _BoardScreenState extends State<BoardScreen> {
   }
 
   Future<void> _loadWorkspaces() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() { _isLoading = true; });
+
     try {
       final workspaces = await _trelloApi.getWorkspaces();
+      final membersCountsFutures = workspaces.map((workspace) {
+        return _trelloApi.getMembershipsOfOrganization(workspace.id);
+      }).toList();
+
+      final membersCounts = await Future.wait(membersCountsFutures);
+      for (int i = 0; i < workspaces.length; i++) {
+        workspaces[i].membersCount = membersCounts[i];
+      }
+
       setState(() {
         _workspaces = workspaces;
+        _isLoading = false;
       });
     } catch (e) {
       print(e);
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
+
 
   Future<void> _createWorkspace(String workspaceName) async {
     try {
@@ -130,41 +137,69 @@ class _BoardScreenState extends State<BoardScreen> {
   }
 
   Future<void> _showEditDialog(String idWorkspace, String currentName) async {
-    final TextEditingController _editNameController =
-        TextEditingController(text: currentName);
-    return showDialog<void>(
-      context: context,
-      barrierDismissible:
-          false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Modifier le nom du workspace'),
-          content: TextField(
-            controller: _editNameController,
-            decoration: InputDecoration(hintText: "Entrez le nouveau nom ici"),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Enregistrer'),
-              onPressed: () {
-                if (_editNameController.text.isNotEmpty) {
-                  _updateWorkspace(
-                      idWorkspace, _editNameController.text.trim());
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
+  TextEditingController _editNameController = TextEditingController(text: currentName);
+  List<Member> members = [];
+
+  try {
+    members = await _trelloApi.getMembersOfOrganisation(idWorkspace);
+  } catch (e) {
+    print("Erreur lors de la récupération des membres: $e");
   }
+
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Modifier le workspace'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: _editNameController,
+                decoration: InputDecoration(hintText: "Nouveau nom du workspace"),
+              ),
+              // Liste des membres pour suppression
+              for (var member in members)
+                ListTile(
+                  title: Text(member.fullName),
+                  subtitle: Text(member.email ?? 'Pas d\'email'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () async {
+                      await _trelloApi.removeMemberFromOrganization(idWorkspace, member.id);
+                      Navigator.of(context).pop(); // Fermer la boîte de dialogue après suppression
+                      _loadWorkspaces(); // Recharger les workspaces pour refléter les changements
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Annuler'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Enregistrer'),
+            onPressed: () async {
+              if (_editNameController.text.isNotEmpty) {
+                await _trelloApi.updateWorkspace(idWorkspace, _editNameController.text.trim());
+                Navigator.of(context).pop();
+                _loadWorkspaces(); // Recharger les workspaces après la mise à jour
+              }
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Future<void> _promptCreateWorkspace() async {
     final TextEditingController controller = TextEditingController();
@@ -193,6 +228,45 @@ class _BoardScreenState extends State<BoardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _promptInviteToOrganization(BuildContext context, String organizationId) async {
+    final TextEditingController emailController = TextEditingController();
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Inviter à rejoindre l\'organisation'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(hintText: "Email"),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Inviter'),
+              onPressed: () {
+                // Utilisez _trelloApi pour appeler inviteToOrganization
+                _trelloApi.inviteToOrganization(organizationId, emailController.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -247,7 +321,8 @@ class _BoardScreenState extends State<BoardScreen> {
                           color: Colors.white,
                           child: ListTile(
                             title: Text(workspace.name),
-                            leading: Icon(Icons.dashboard),
+                            subtitle: Text('${workspace.membersCount} member(s)'),
+                            leading: Icon(Icons.space_dashboard),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -256,8 +331,12 @@ class _BoardScreenState extends State<BoardScreen> {
                                   onPressed: () => _showEditDialog(workspace.id, workspace.name),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.close),
+                                  icon: Icon(Icons.delete),
                                   onPressed: () => _confirmAndDeleteWorkspace(workspace.id),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.person_add),
+                                  onPressed: () => _promptInviteToOrganization(context, workspace.id),
                                 ),
                               ],
                             ),

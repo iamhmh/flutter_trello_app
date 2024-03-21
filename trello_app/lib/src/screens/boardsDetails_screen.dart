@@ -284,7 +284,7 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
 
   Future<void> _moveCardToList(Cards card, String newListId) async {
     try {
-      final updatedCard = await _trelloApi.updateCard(card.id, listId: newListId);
+      final updatedCard = _trelloApi.updateCard(card.id, listId: newListId);
       _loadLists();
     } catch (error) {
       print(error);
