@@ -3,7 +3,7 @@ class Member {
   final String fullName;
   final String username;
   final String? email;
-  final String avatarUrl;
+  String avatarUrl;
 
   Member({
     required this.id,
@@ -22,4 +22,6 @@ class Member {
       avatarUrl: json['avatarUrl'] ?? "",
     );
   }
+
+  get avatarHash => null;
 }

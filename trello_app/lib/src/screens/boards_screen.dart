@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trello_app/src/components/custom_app_bar.dart';
-import 'package:trello_app/src/components/custom_navigation_bar.dart';
 import 'package:trello_app/src/models/member.dart';
-import 'package:trello_app/src/services/trello_api.dart'; // Assurez-vous que le chemin d'accès est correct
+import 'package:trello_app/src/services/trello_api.dart';
 import 'package:trello_app/src/models/workspace.dart';
 import 'package:trello_app/src/screens/workspaceDetails_screen.dart'; 
 
@@ -104,14 +102,14 @@ class _BoardScreenState extends State<BoardScreen> {
             );
           },
         ) ??
-        false; // La valeur par défaut est `false` si rien n'est retourné (par exemple, si l'utilisateur ferme la boîte de dialogue)
+        false;
 
     if (confirm) {
       try {
         await _trelloApi.deleteWorkspace(idWorkspace);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Workspace supprimé')));
-        _loadWorkspaces(); // Recharger la liste des workspaces après la suppression
+        _loadWorkspaces();
       } catch (e) {
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -160,7 +158,7 @@ class _BoardScreenState extends State<BoardScreen> {
                   controller: _editNameController,
                   decoration: InputDecoration(hintText: "Nouveau nom du workspace"),
                 ),
-                // Liste des membres pour suppression
+                
                 for (var member in members)
                   ListTile(
                     title: Text(member.fullName),
@@ -168,7 +166,7 @@ class _BoardScreenState extends State<BoardScreen> {
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () async {
-                        // Ici, vous intégrez le code de confirmation
+                        
                         bool confirm = await _showConfirmationDialog(
                           context,
                           'Confirmation de suppression',
@@ -177,8 +175,8 @@ class _BoardScreenState extends State<BoardScreen> {
 
                         if (confirm) {
                           await _trelloApi.removeMemberFromOrganization(idWorkspace, member.id);
-                          Navigator.of(context).pop(); // Fermer la boîte de dialogue après suppression
-                          _loadWorkspaces(); // Recharger les workspaces pour refléter les changements
+                          Navigator.of(context).pop();
+                          _loadWorkspaces();
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Membre supprimé avec succès')));
                         }
                       },
@@ -200,7 +198,7 @@ class _BoardScreenState extends State<BoardScreen> {
                 if (_editNameController.text.isNotEmpty) {
                   await _trelloApi.updateWorkspace(idWorkspace, _editNameController.text.trim());
                   Navigator.of(context).pop();
-                  _loadWorkspaces(); // Recharger les workspaces après la mise à jour
+                  _loadWorkspaces();
                 }
               },
             ),
@@ -209,7 +207,6 @@ class _BoardScreenState extends State<BoardScreen> {
       },
     );
   }
-
 
   Future<bool> _showConfirmationDialog(BuildContext context, String title, String message) async {
     return await showDialog<bool>(
@@ -232,7 +229,6 @@ class _BoardScreenState extends State<BoardScreen> {
       },
     ) ?? false;
   }
-
 
   Future<void> _promptCreateWorkspace() async {
     final TextEditingController controller = TextEditingController();
@@ -292,7 +288,6 @@ class _BoardScreenState extends State<BoardScreen> {
             TextButton(
               child: Text('Inviter'),
               onPressed: () {
-                // Utilisez _trelloApi pour appeler inviteToOrganization
                 _trelloApi.inviteToOrganization(organizationId, emailController.text);
                 Navigator.of(context).pop();
               },
@@ -307,7 +302,7 @@ class _BoardScreenState extends State<BoardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: Color(0xfffceee7),// Définir la couleur de fond ici
+        color: Color(0xfffceee7),
         child: Column(
           children: [
             Padding(
@@ -327,7 +322,7 @@ class _BoardScreenState extends State<BoardScreen> {
                       onChanged: (value) => _filterWorkspaces(value),
                     ),
                   ),
-                  SizedBox(width: 8), // Espacement entre le champ de texte et le bouton
+                  SizedBox(width: 8),
                   IconButton(
                     icon: Icon(Icons.add),
                     onPressed: () => _promptCreateWorkspace(),

@@ -1,3 +1,5 @@
+import 'package:trello_app/src/models/member.dart';
+
 class Cards {
   final String id;
   final String name;
@@ -12,4 +14,6 @@ class Cards {
       desc: json['desc'],
     );
   }
+
+  set members(List<Member> members) {}
 }

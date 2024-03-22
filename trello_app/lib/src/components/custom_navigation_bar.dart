@@ -64,7 +64,6 @@ class CustomNavigationBar extends StatelessWidget {
             selectedIcon: Icon(Icons.account_circle),
             label: 'Account',
           ),
-          // Ajoute d'autres destinations ici
         ],
       ),
     );

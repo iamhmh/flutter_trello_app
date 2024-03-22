@@ -18,11 +18,11 @@ class HomeScreen extends StatelessWidget {
               Text('Log in / Sign up', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () => _authService.authenticate(context), // Utilise authenticate pour la connexion
+                onPressed: () => _authService.authenticate(context),
                 child: Text('Log in with email'),
               ),
               ElevatedButton(
-                onPressed: () => _authService.authenticate(context), // Réutilise authenticate pour l'inscription
+                onPressed: () => _authService.authenticate(context),
                 child: Text('Log in with Google'),
               ),
             ],

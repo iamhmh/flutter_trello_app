@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Widget> _widgetOptions() => [
         DashboardContent(
           user: user, 
-          onCreateWorkspacePressed: () => navigateToBoardScreen(), // Assurez-vous que cette ligne est correcte
+          onCreateWorkspacePressed: () => navigateToBoardScreen(),
         ),
         BoardScreen(),
         SearchScreen(),
@@ -32,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void navigateToBoardScreen() {
     setState(() {
-      _selectedIndex = 1; // Assurez-vous que cet index correspond à BoardScreen dans _widgetOptions
+      _selectedIndex = 1;
     });
   }
 

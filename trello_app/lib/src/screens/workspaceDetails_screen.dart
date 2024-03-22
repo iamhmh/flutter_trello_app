@@ -45,31 +45,53 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
   }
 
   Future<void> _loadBoards() async {
-    setState(() => _isLoading = true);
+      if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final boards = await _trelloApi.getBoards(widget.workspace.id);
+      await _updateBoardMembersCount(boards);
+        if (!mounted) return;
       setState(() {
         _boards = boards;
         _isLoading = false;
       });
     } catch (e) {
-      print(e);
+      print("Erreur lors du chargement des tableaux ou des membres: $e");
+       if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateBoardMembersCount(List<Board> boards) async {
+    for (var board in boards) {
+      try {
+        int membersCount = await _trelloApi.getBoardMemberships(board.id);
+        board.membersCount = membersCount;
+      } catch (e) {
+        print("Erreur lors de la récupération du nombre de membres pour le tableau ${board.id}: $e");
+        board.membersCount = 0;
+      }
     }
   }
 
   Future<void> _promptCreateBoard() async {
     final TextEditingController _boardNameController = TextEditingController();
-    bool _defaultLists = true; // Par défaut, les listes seront créées
+    bool _defaultLists = true; 
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder( // Utilisez StatefulBuilder pour mettre à jour l'état local dans le dialogue
+        return StatefulBuilder( 
           builder: (context, setState) {
             return AlertDialog(
               title: Text('Créer un nouveau board'),
               content: Column(
-                mainAxisSize: MainAxisSize.min, // Pour éviter l'excès d'espace
+                mainAxisSize: MainAxisSize.min, 
                 children: [
                   TextField(
                     controller: _boardNameController,
@@ -105,9 +127,9 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                       try {
                         final newBoard = await _trelloApi.createBoard(
                             widget.workspace.id, _boardNameController.text.trim(),
-                            defaultLists: _defaultLists); // Passez le choix de l'utilisateur
-                        Navigator.of(context).pop(); // Fermer le dialogue
-                        _loadBoards(); // Recharger les tableaux
+                            defaultLists: _defaultLists); 
+                        Navigator.of(context).pop();
+                        _loadBoards(); 
                       } catch (error) {
                         print(error);
                       }
@@ -123,45 +145,46 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
   }
 
   Future<void> _editBoard(Board board) async {
-    final TextEditingController _editNameController =
-        TextEditingController(text: board.name);
+    final TextEditingController _editNameController = TextEditingController(text: board.name);
+    List<Member>? members = await _trelloApi.getBoardMembers(board.id);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Modifier le board'),
-          content: TextField(
-            controller: _editNameController,
-            decoration: InputDecoration(hintText: "Nouveau nom du board"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  controller: _editNameController,
+                  decoration: InputDecoration(hintText: "Nouveau nom du board"),
+                ),
+                ...members!.map((member) {
+                  return ListTile(
+                    title: Text(member.fullName),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () async {
+                        _promptRemoveMemberFromBoard(board, member);
+                        _loadBoards();
+                      },
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
           ),
           actions: <Widget>[
             TextButton(
               child: Text('Annuler'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: Text('Enregistrer'),
               onPressed: () async {
-                if (_editNameController.text.isNotEmpty) {
-                  try {
-                    await _trelloApi.updateBoard(
-                        board.id, _editNameController.text.trim());
-                    Navigator.of(context)
-                        .pop(); // Fermer la boîte de dialogue après la modification
-                    _loadBoards(); // Recharger la liste des boards pour afficher les modifications
-                  } catch (error) {
-                    print(error);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text('Erreur lors de la modification du board')));
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Le nom du board ne peut pas être vide')));
-                }
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -217,24 +240,83 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
   }
 
   Future<void> _promptAssignMemberToBoard(Member member) async {
+    String? selectedBoardId;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Assigner ${member.fullName} à un tableau'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text('Choisir un tableau :'),
+                    DropdownButton<String>(
+                      hint: Text("Sélectionner un tableau"),
+                      value: selectedBoardId,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedBoardId = newValue;
+                        });
+                      },
+                      items: _boards.map<DropdownMenuItem<String>>((Board board) {
+                        return DropdownMenuItem<String>(
+                          value: board.id,
+                          child: Text(board.name),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Annuler'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('Assigner'),
+                  onPressed: selectedBoardId == null ? null : () async {
+                    try {
+                      await _trelloApi.assignMemberToBoard(selectedBoardId!, member.id, "normal");
+                      Navigator.of(context).pop();
+                      _loadBoards();
+                    } catch (error) {
+                      print(error);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de l\'assignation du membre au tableau')));
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _promptRemoveMemberFromBoard(Board board, Member member) async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Assigner un membre à un board'),
-          content: Text('Voulez-vous vraiment assigner ${member.fullName} à un board ?'),
+          title: Text('Supprimer le membre'),
+          content: Text('Voulez-vous vraiment supprimer ${member.fullName} du tableau ${board.name}?'),
           actions: <Widget>[
-            TextButton(child: Text('Annuler'), onPressed: () => Navigator.of(context).pop()),
             TextButton(
-              child: Text('Assigner'),
+              child: Text('Annuler'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Supprimer'),
               onPressed: () async {
-                try {
-                  await _trelloApi.assignMemberToBoard(member.id, _boards.first.id);
-                  Navigator.of(context).pop();
-                } catch (error) {
-                  print(error);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de l\'assignation du membre au board')));
-                }
+                Navigator.of(context).pop();
+                await _removeMemberFromBoard(board.id, member.id);
+                _loadBoards(); 
               },
             ),
           ],
@@ -243,6 +325,16 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
     );
   }
 
+  Future<void> _removeMemberFromBoard(String boardId, String memberId) async {
+    try {
+      await _trelloApi.removeMemberFromBoard(boardId, memberId);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Membre supprimé avec succès.')));
+      _loadBoards();
+    } catch (error) {
+      print(error);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la suppression du membre.')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +352,7 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
         ],
       ),
       body: Container(
-        color: Color(0xfff57b51), // Définissez la couleur de fond à orange
+        color: Color(0xfff57b51),
         child: Column(
           children: [
             Padding(
@@ -303,10 +395,10 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
             ),
             SizedBox(height: 5),
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 6.0), // Assurez-vous que ce conteneur est aligné avec les autres éléments
+              margin: EdgeInsets.symmetric(horizontal: 6.0), 
               decoration: BoxDecoration(
                 color: Color(0xfffceee7),
-                borderRadius: BorderRadius.circular(20), // Bords arrondis
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -337,7 +429,7 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 10), // Ajoute un espace entre les éléments (équivalent à margin-bottom en CSS
+            SizedBox(height: 10),
             Text(
               'Boards (${_boards.length})',
               style: TextStyle(fontSize: 20),
@@ -354,6 +446,7 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                           color: Color(0xfffceee7),
                           child: ListTile(
                             title: Text(board.name),
+                            subtitle: Text('${board.membersCount} member(s)'),
                             leading: Icon(Icons.dashboard),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,

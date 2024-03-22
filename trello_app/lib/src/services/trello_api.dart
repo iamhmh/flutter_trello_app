@@ -214,17 +214,25 @@ class TrelloApi {
     }
   }
 
-  Future<Cards> createCard(String listId, String name, {String? desc}) async {
+  Future<Cards> createCard(String listId, String name, {String? desc, List<String>? memberIds}) async {
+    final Uri apiUri = Uri.parse('https://api.trello.com/1/cards');
     final response = await http.post(
-      Uri.parse('https://api.trello.com/1/cards?name=$name&idList=$listId&desc=${desc ?? ""}&key=${Constants.apiKey}&token=${Constants.apiToken}'),
-      headers: {'Accept': 'application/json'},
+      apiUri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'desc': desc ?? '',
+        'idList': listId,
+        'idMembers': memberIds?.join(',') ?? '',
+        'key': Constants.apiKey,
+        'token': Constants.apiToken,
+      }),
     );
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
-      return Cards.fromJson(jsonData);
+      return Cards.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to create card: ${response.statusCode}');
+      throw Exception('Failed to create card: ${response.body}');
     }
   }
 
@@ -257,6 +265,26 @@ class TrelloApi {
       throw Exception('Failed to delete card: ${response.statusCode}');
     }
   }
+
+  Future<List<Member>> getCardMembers(String cardId) async {
+    final response = await http.get(
+      Uri.parse(
+        'https://api.trello.com/1/cards/$cardId/members?member_fields=avatarHash,fullName,username&key=${Constants.apiKey}&token=${Constants.apiToken}'
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = json.decode(response.body);
+      List<Member> members = body.map((dynamic item) => Member.fromJson(item)).toList();
+      for (var member in members) {
+        member.avatarUrl = await getMemberAvatarUrl(member.id);
+      }
+      return members;
+    } else {
+      throw Exception('Failed to load members: ${response.statusCode}');
+    }
+  }
+
 
   //Members
 
@@ -325,8 +353,23 @@ class TrelloApi {
     }
   }
 
-  Future<void> assignMemberToBoard(String boardId, String memberId) async {
-    final url = Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}&idMember=$memberId&type=normal');
+  Future<int> getBoardMemberships(String boardId) async {
+    final response = await http.get(
+      Uri.parse('https://api.trello.com/1/boards/$boardId/memberships?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = jsonDecode(response.body);
+      return jsonData.length;
+    } else {
+      throw Exception('Failed to get board memberships: ${response.statusCode}');
+    }
+  }
+
+  Future<void> assignMemberToBoard(String boardId, String memberId, String type) async {
+    final url = Uri.parse(
+        'https://api.trello.com/1/boards/$boardId/members/$memberId?key=${Constants.apiKey}&token=${Constants.apiToken}&type=$type');
     final response = await http.put(url);
 
     if (response.statusCode == 200) {
@@ -335,4 +378,42 @@ class TrelloApi {
       throw Exception('Failed to assign member to board: ${response.statusCode}');
     }
   }
+
+  Future<void> removeMemberFromBoard(String boardId, String memberId) async {
+    final url = Uri.parse('https://api.trello.com/1/boards/$boardId/members/$memberId?key=${Constants.apiKey}&token=${Constants.apiToken}');
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
+      print('Member successfully removed from organization.');
+    } else {
+      throw Exception('Failed to remove member from organization: ${response.statusCode}');
+    }
+  }
+
+  Future<List<Member>> getBoardMembers(String boardId) async {
+    final response = await http.get(
+      Uri.parse('https://api.trello.com/1/boards/$boardId/members?key=${Constants.apiKey}&token=${Constants.apiToken}'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = jsonDecode(response.body);
+      return jsonData.map((data) => Member.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to get board members: ${response.statusCode}');
+    }
+  }
+
+  Future<String> getMemberAvatarUrl(String memberId) async {
+    final url = Uri.parse('https://api.trello.com/1/members/$memberId/avatarUrl?key=${Constants.apiKey}&token=${Constants.apiToken}');
+    final response = await http.get(url, headers: {'Accept': 'application/json'});
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      return jsonData['avatarUrl'] ?? '';
+    } else {
+      throw Exception('Failed to get member avatar URL: ${response.statusCode}');
+    }
+  }
+
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trello_app/src/models/board.dart';
 import 'package:trello_app/src/models/lists.dart';
 import 'package:trello_app/src/models/card.dart';
+import 'package:trello_app/src/models/member.dart';
 import 'package:trello_app/src/services/trello_api.dart';
 import 'package:trello_app/src/widgets/card_widget.dart';
 
@@ -32,6 +33,10 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
       final lists = await _trelloApi.getLists(widget.board.id);
       await Future.forEach(lists, (Lists list) async {
         final cards = await _trelloApi.getCards(list.id);
+        for (var card in cards) {
+          var members = await _trelloApi.getCardMembers(card.id);
+          card.members = members;
+        }
         list.cards = cards;
       });
       setState(() {
@@ -69,7 +74,7 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
                   try {
                     final newList = await _trelloApi.createLists(widget.board.id, _listNameController.text.trim());
                     setState(() {
-                      _lists.add(newList); // Supposant que _lists est votre liste de listes en mémoire
+                      _lists.add(newList); 
                     });
                     Navigator.of(context).pop();
                   } catch (error) {
@@ -107,7 +112,7 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
                     Navigator.pop(context);
                     _loadLists();
                   } catch (error) {
-                    // Gérez les erreurs ici
+                    print(error);
                   }
                 }
               },
@@ -148,52 +153,65 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
   Future<void> _promptCreateCard(String listId) async {
     final TextEditingController _cardNameController = TextEditingController();
     final TextEditingController _cardDescController = TextEditingController();
+    List<Member> members = await _trelloApi.getBoardMembers(widget.board.id); // Chargez les membres du tableau
+    Map<String, bool> selectedMembers = Map.fromIterable(members, key: (member) => member.id, value: (member) => false);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Créer une nouvelle carte'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _cardNameController,
-                decoration: InputDecoration(hintText: "Nom de la carte"),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Créer une nouvelle carte'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _cardNameController,
+                      decoration: InputDecoration(hintText: "Nom de la carte"),
+                    ),
+                    TextField(
+                      controller: _cardDescController,
+                      decoration: InputDecoration(hintText: "Description de la carte"),
+                    ),
+                    ...members.map((member) => CheckboxListTile(
+                          title: Text(member.fullName),
+                          value: selectedMembers[member.id],
+                          onChanged: (bool? value) {
+                            setState(() {
+                              selectedMembers[member.id] = value!;
+                            });
+                          },
+                        )),
+                  ],
+                ),
               ),
-              TextField(
-                controller: _cardDescController, // Champ pour la description
-                decoration: InputDecoration(hintText: "Description de la carte"),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Créer'),
-              onPressed: () async {
-                final cardName = _cardNameController.text.trim();
-                final cardDesc = _cardDescController.text.trim(); // Récupère la description
-                if (cardName.isNotEmpty) {
-                  try {
-                    final newCard = await _trelloApi.createCard(listId, cardName, desc: cardDesc);
-                    Navigator.of(context).pop();
-                    int index = _lists.indexWhere((lst) => lst.id == listId);
-                    if (index != -1) {
-                      setState(() {
-                        _lists[index].cards.add(newCard);
-                      });
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Annuler'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  child: Text('Créer'),
+                  onPressed: () async {
+                    final cardName = _cardNameController.text.trim();
+                    final cardDesc = _cardDescController.text.trim();
+                    List<String> memberIds = selectedMembers.entries.where((entry) => entry.value).map((entry) => entry.key).toList();
+                    if (cardName.isNotEmpty) {
+                      try {
+                        final newCard = await _trelloApi.createCard(listId, cardName, desc: cardDesc, memberIds: memberIds);
+                        Navigator.of(context).pop();
+                        _loadLists();
+                      } catch (error) {
+                        print(error);
+                      }
                     }
-                  } catch (error) {
-                    print(error);
-                  }
-                }
-              },
-            ),
-          ],
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -375,10 +393,10 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
                           child: CardWidget(
                             card: card,
                             onUpdate: () => _promptUpdateCard(card),
-                            onDelete: () => _promptDeleteCard(card.id, list.id),
+                            onDelete: () => _promptDeleteCard(card.id, list.id), assignedMembers: [],
                           ),
                           feedback: Material(
-                            child: CardWidget(card: card, onUpdate: () {}, onDelete: () {}),
+                            child: CardWidget(card: card, onUpdate: () {}, onDelete: () {}, assignedMembers: [],),
                             elevation: 4.0,
                           ),
                           childWhenDragging: Container(),
