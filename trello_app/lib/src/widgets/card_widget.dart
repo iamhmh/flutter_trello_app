@@ -27,42 +27,64 @@ class CardWidget extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(card.name, style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(card.name, style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  IconButton(icon: Icon(Icons.edit, size: 15), onPressed: onUpdate),
+                  IconButton(icon: Icon(Icons.delete, size: 15), onPressed: onDelete),
+                ],
               ),
-              IconButton(icon: Icon(Icons.edit, size: 15), onPressed: onUpdate),
-              IconButton(icon: Icon(Icons.delete, size: 15), onPressed: onDelete),
+              SizedBox(height: 4),
+              Text(
+                card.desc ?? "Pas de description",
+                style: TextStyle(color: Colors.grey[600]),
+              ),
             ],
           ),
-          SizedBox(height: 4),
-          Wrap(
-            spacing: 8.0,
-            children: assignedMembers.map((member) {
-              ImageProvider<Object> imageProvider;
-              if (member.avatarUrl.isNotEmpty) {
-                String modifiedAvatarUrl = "${member.avatarUrl}/50.png";
-                imageProvider = NetworkImage(modifiedAvatarUrl);
-              } else {
-                imageProvider = AssetImage("assets/images/default_avatar.png"); // Assurez-vous que ce chemin est correct
-              }
-              return CircleAvatar(
-                backgroundImage: imageProvider,
-                radius: 16,
-              );
-            }).toList(),
-          ),
-          Text(
-            card.desc ?? "Pas de description",
-            style: TextStyle(color: Colors.grey[600]),
+          Positioned(
+            bottom: 2,
+            right: 13,
+            child: _buildAssignedMembersAvatars(),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildAssignedMembersAvatars() {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: assignedMembers.map((member) {
+      var avatarUrl = member.avatarUrl;
+
+      String displayAvatarUrl = avatarUrl != null && avatarUrl.isNotEmpty
+          ? "$avatarUrl/50.png"
+          : "assets/images/utilisateur.png";
+
+      return Container(
+        width: 20,
+        height: 20,
+        margin: EdgeInsets.only(left: 2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: displayAvatarUrl.startsWith('http')
+                ? NetworkImage(displayAvatarUrl) as ImageProvider
+                : AssetImage(displayAvatarUrl),
+            fit: BoxFit.fill,
+          ),
+        ),
+      );
+    }).toList(),
+  );
+}
+
 }

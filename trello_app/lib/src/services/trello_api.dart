@@ -236,11 +236,12 @@ class TrelloApi {
     }
   }
 
-  Future<Cards> updateCard(String cardId, {String? name, String? desc, String? listId}) async {
+  Future<Cards> updateCard(String cardId, {String? name, String? desc, String? listId, List<String>? memberIds}) async {
     final Map<String, dynamic> updates = {};
     if (name != null) updates['name'] = name;
     if (desc != null) updates['desc'] = desc;
     if (listId != null) updates['idList'] = listId;
+    if (memberIds != null) updates['idMembers'] = memberIds;
 
     final response = await http.put(
       Uri.parse('https://api.trello.com/1/cards/$cardId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
@@ -256,6 +257,7 @@ class TrelloApi {
     }
   }
 
+
   Future<void> deleteCard(String cardId) async {
     final response = await http.delete(
       Uri.parse('https://api.trello.com/1/cards/$cardId?key=${Constants.apiKey}&token=${Constants.apiToken}'),
@@ -268,23 +270,25 @@ class TrelloApi {
 
   Future<List<Member>> getCardMembers(String cardId) async {
     final response = await http.get(
-      Uri.parse(
-        'https://api.trello.com/1/cards/$cardId/members?member_fields=avatarHash,fullName,username&key=${Constants.apiKey}&token=${Constants.apiToken}'
-      ),
+      Uri.parse('https://api.trello.com/1/cards/$cardId/members?member_fields=avatarHash,fullName,username&key=${Constants.apiKey}&token=${Constants.apiToken}'),
     );
 
     if (response.statusCode == 200) {
       List<dynamic> body = json.decode(response.body);
       List<Member> members = body.map((dynamic item) => Member.fromJson(item)).toList();
       for (var member in members) {
-        member.avatarUrl = await getMemberAvatarUrl(member.id);
+        // Assurez-vous que l'URL de l'avatar est correctement définie pour chaque membre
+        var avatarHash = member.avatarHash;
+        if (avatarHash != null && avatarHash.isNotEmpty) {
+          // Construire l'URL de l'avatar en utilisant le hash
+          member.avatarUrl = "https://trello-avatars.s3.amazonaws.com/$avatarHash/50.png";
+        }
       }
       return members;
     } else {
       throw Exception('Failed to load members: ${response.statusCode}');
     }
   }
-
 
   //Members
 

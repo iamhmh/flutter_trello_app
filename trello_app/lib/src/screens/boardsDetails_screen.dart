@@ -220,50 +220,66 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
   Future<void> _promptUpdateCard(Cards card) async {
     final TextEditingController _cardNameController = TextEditingController(text: card.name);
     final TextEditingController _cardDescController = TextEditingController(text: card.desc ?? "");
+    List<Member> allMembers = await _trelloApi.getBoardMembers(widget.board.id); // Chargez tous les membres du tableau
+    Map<String, bool> memberSelections = { for (var m in allMembers) m.id : card.members.any((cm) => cm.id == m.id) };
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Modifier la carte'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: _cardNameController, decoration: InputDecoration(hintText: "Nom de la carte")),
-              TextField(controller: _cardDescController, decoration: InputDecoration(hintText: "Description de la carte")),
-            ],
-          ),
-          actions: [
-            TextButton(child: Text('Annuler'), onPressed: () => Navigator.pop(context)),
-            TextButton(
-              child: Text('Enregistrer'),
-              onPressed: () async {
-                final newName = _cardNameController.text.trim();
-                final newDesc = _cardDescController.text.trim();
-                if (newName.isNotEmpty || newDesc.isNotEmpty) {
-                  try {
-                    final updatedCard = await _trelloApi.updateCard(card.id, name: newName, desc: newDesc);
-                    Navigator.pop(context);
-                    int listIndex = _lists.indexWhere((lst) => lst.cards.indexWhere((c) => c.id == updatedCard.id) != -1);
-                    if (listIndex != -1) {
-                      int cardIndex = _lists[listIndex].cards.indexWhere((c) => c.id == updatedCard.id);
-                      if (cardIndex != -1) {
-                        setState(() {
-                          _lists[listIndex].cards[cardIndex] = updatedCard;
-                        });
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Modifier la carte'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(controller: _cardNameController, decoration: InputDecoration(hintText: "Nom de la carte")),
+                    TextField(controller: _cardDescController, decoration: InputDecoration(hintText: "Description de la carte")),
+                    ...allMembers.map((member) => CheckboxListTile(
+                          title: Text(member.fullName),
+                          value: memberSelections[member.id],
+                          onChanged: (bool? value) {
+                            setState(() {
+                              memberSelections[member.id] = value!;
+                            });
+                          },
+                        )),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(child: Text('Annuler'), onPressed: () => Navigator.pop(context)),
+                TextButton(
+                  child: Text('Enregistrer'),
+                  onPressed: () async {
+                    final newName = _cardNameController.text.trim();
+                    final newDesc = _cardDescController.text.trim();
+                    List<String> updatedMemberIds = memberSelections.entries.where((entry) => entry.value).map((entry) => entry.key).toList();
+                    if (newName.isNotEmpty || newDesc.isNotEmpty || updatedMemberIds.isNotEmpty) {
+                      try {
+                        await _trelloApi.updateCard(
+                          card.id,
+                          name: newName,
+                          desc: newDesc,
+                          memberIds: updatedMemberIds,
+                        );
+                        Navigator.pop(context);
+                        _loadLists();
+                      } catch (error) {
+                        print(error);
                       }
                     }
-                  } catch (error) {
-                    print(error);
-                  }
-                }
-              },
-            ),
-          ],
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
 
   Future<void> _promptDeleteCard(String cardId, String listId) async {
     showDialog(
@@ -388,15 +404,17 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
                     )
                   : Column(
                       children: list.cards.map((card) {
+                        List<Member> assignedMembers = card.members;
                         return Draggable<Cards>(
                           data: card,
                           child: CardWidget(
                             card: card,
                             onUpdate: () => _promptUpdateCard(card),
-                            onDelete: () => _promptDeleteCard(card.id, list.id), assignedMembers: [],
+                            onDelete: () => _promptDeleteCard(card.id, list.id),
+                            assignedMembers: assignedMembers,
                           ),
                           feedback: Material(
-                            child: CardWidget(card: card, onUpdate: () {}, onDelete: () {}, assignedMembers: [],),
+                            child: CardWidget(card: card, onUpdate: () {}, onDelete: () {}, assignedMembers: assignedMembers,),
                             elevation: 4.0,
                           ),
                           childWhenDragging: Container(),
