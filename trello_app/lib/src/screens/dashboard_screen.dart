@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:trello_app/src/components/custom_navigation_bar.dart';
 import 'package:trello_app/src/components/custom_app_bar.dart';
 import 'package:trello_app/src/screens/account_screen.dart';
@@ -50,9 +51,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadUserInfo() async {
-    String token = Constants.apiToken;
     try {
-      var userInfo = await TrelloApi().getMemberInfo(token);
+      var api = Provider.of<TrelloApi>(context, listen: false);
+      var userInfo = await api.getMemberInfo(Constants.apiToken);
       setState(() {
         user = userInfo;
         isLoading = false;
@@ -69,8 +70,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
-      body: _widgetOptions().elementAt(_selectedIndex),
+      body: isLoading
+        ? Center(child: CircularProgressIndicator())
+        : _widgetOptions().elementAt(_selectedIndex),
       bottomNavigationBar: CustomNavigationBar(
+        key: Key('customNavigationBar'),
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),

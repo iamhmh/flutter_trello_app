@@ -36,71 +36,73 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xfff57b51),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center, 
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 50),
-            child: SizedBox(
-              height: 400,
-              width: 400,
-              child: Image.asset('assets/images/logo.png'),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, 
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 50),
+              child: SizedBox(
+                height: 400,
+                width: 400,
+                child: Image.asset('assets/images/logo.png'),
+              ),
             ),
-          ),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 40),
-                  child: Text(
-                    'Just manage your tasks.',
-                    style: TextStyle(fontSize: 24, color: Color(0xfff8f3e5)),
-                    textAlign: TextAlign.center,
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: Text(
+                      'Just manage your tasks.',
+                      style: TextStyle(fontSize: 24, color: Color(0xfff8f3e5)),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-                SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                  SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
                         ),
-                      ),
-                      onPressed: () => _showBottomSheet(context),
-                      child: Text(
-                        'Log in',
-                        style: TextStyle(fontSize: 12, color: Colors.black),
+                        onPressed: () => _showBottomSheet(context),
+                        child: Text(
+                          'Log in',
+                          style: TextStyle(fontSize: 12, color: Colors.black),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
                         ),
-                      ),
-                      onPressed: () => _showBottomSheet(context),
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(fontSize: 12, color: Colors.black),
+                        onPressed: () => _showBottomSheet(context),
+                        child: Text(
+                          'Sign up',
+                          style: TextStyle(fontSize: 12, color: Colors.black),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
