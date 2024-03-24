@@ -57,14 +57,14 @@ class _BoardScreenState extends State<BoardScreen> {
     try {
       final newWorkspace = await _trelloApi.createWorkspace(workspaceName);
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Workspace créé : ${newWorkspace.name}')));
+          SnackBar(content: Text('Created workspace : ${newWorkspace.name}')));
       _workspaceNameController.clear();
       _loadWorkspaces();
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-              "Erreur lors de la création du workspace. Vérifiez votre connexion et les détails de l'API.")));
+              "Error while creating the workspace. Check your connection and API details.")));
     }
   }
 
@@ -87,16 +87,16 @@ class _BoardScreenState extends State<BoardScreen> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Confirmation'),
-              content: Text('Voulez-vous vraiment supprimer ce workspace ?'),
+              title: Text('Confirm Delete'),
+              content: Text('Are you sure to delete this workspace ?'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: Text('Annuler'),
+                  child: Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: Text('Supprimer'),
+                  child: Text('Delete'),
                 ),
               ],
             );
@@ -108,13 +108,13 @@ class _BoardScreenState extends State<BoardScreen> {
       try {
         await _trelloApi.deleteWorkspace(idWorkspace);
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Workspace supprimé')));
+            .showSnackBar(SnackBar(content: Text('Workspace deleted')));
         _loadWorkspaces();
       } catch (e) {
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                "Erreur lors de la suppression du workspace. Vérifiez votre connexion et les détails de l'API.")));
+                "Error while deleting the workspace. Check your connection and API details.")));
       }
     }
   }
@@ -124,13 +124,13 @@ class _BoardScreenState extends State<BoardScreen> {
       final updatedWorkspace =
           await _trelloApi.updateWorkspace(idWorkspace, newName);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Workspace mis à jour : ${updatedWorkspace.name}')));
+          content: Text('Updated workspace : ${updatedWorkspace.name}')));
       _loadWorkspaces();
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-              "Erreur lors de la mise à jour du workspace. Vérifiez votre connexion et les détails de l'API.")));
+              "Error while updating the workspace. Check your connection and API details.")));
     }
   }
 
@@ -141,7 +141,7 @@ class _BoardScreenState extends State<BoardScreen> {
     try {
       members = await _trelloApi.getMembersOfOrganisation(idWorkspace);
     } catch (e) {
-      print("Erreur lors de la récupération des membres: $e");
+      print("Error : $e");
     }
 
     showDialog<void>(
@@ -149,35 +149,36 @@ class _BoardScreenState extends State<BoardScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Modifier le workspace'),
+          title: Text('Update the workspace'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                Text('Current name : $currentName'),
+                SizedBox(height: 8),
                 TextField(
                   controller: _editNameController,
-                  decoration: InputDecoration(hintText: "Nouveau nom du workspace"),
+                  decoration: InputDecoration(hintText: "New name of the workspace"),
                 ),
-                
+                SizedBox(height: 8),
                 for (var member in members)
                   ListTile(
                     title: Text(member.fullName),
-                    subtitle: Text(member.email ?? 'Pas d\'email'),
+                    subtitle: Text(member.email ?? 'No email provided'),
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () async {
-                        
                         bool confirm = await _showConfirmationDialog(
                           context,
-                          'Confirmation de suppression',
-                          'Voulez-vous vraiment supprimer ce membre ?',
+                          'Delete member',
+                          'Are you sure to delete this member from the workspace ?',
                         );
 
                         if (confirm) {
                           await _trelloApi.removeMemberFromOrganization(idWorkspace, member.id);
                           Navigator.of(context).pop();
                           _loadWorkspaces();
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Membre supprimé avec succès')));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleted member ${member.fullName}')));
                         }
                       },
                     ),
@@ -187,13 +188,13 @@ class _BoardScreenState extends State<BoardScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Enregistrer'),
+              child: Text('Save'),
               onPressed: () async {
                 if (_editNameController.text.isNotEmpty) {
                   await _trelloApi.updateWorkspace(idWorkspace, _editNameController.text.trim());
@@ -217,11 +218,11 @@ class _BoardScreenState extends State<BoardScreen> {
           content: Text(message),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
-              child: Text('Supprimer'),
+              child: Text('Delete'),
               onPressed: () => Navigator.of(context).pop(true),
             ),
           ],
@@ -236,15 +237,15 @@ class _BoardScreenState extends State<BoardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Nouveau workspace'),
+        title: Text('New workspace'),
         content: TextField(
           controller: controller,
-          decoration: InputDecoration(hintText: 'Nom du workspace'),
+          decoration: InputDecoration(hintText: 'Name of the workspace'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Annuler'),
+            child: Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
@@ -253,7 +254,7 @@ class _BoardScreenState extends State<BoardScreen> {
                 Navigator.pop(context);
               }
             },
-            child: Text('Créer'),
+            child: Text('Create'),
           ),
         ],
       ),
@@ -267,7 +268,7 @@ class _BoardScreenState extends State<BoardScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Inviter à rejoindre l\'organisation'),
+          title: Text('Invite a member to the organization'),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -280,13 +281,13 @@ class _BoardScreenState extends State<BoardScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Inviter'),
+              child: Text('Invite'),
               onPressed: () {
                 _trelloApi.inviteToOrganization(organizationId, emailController.text);
                 Navigator.of(context).pop();

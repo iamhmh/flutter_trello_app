@@ -55,20 +55,20 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Créer une nouvelle liste'),
+          title: Text('Create a new list'),
           content: TextField(
             controller: _listNameController,
-            decoration: InputDecoration(hintText: "Nom de la liste"),
+            decoration: InputDecoration(hintText: "Name of the list"),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Créer'),
+              child: Text('Create'),
               onPressed: () async {
                 if (_listNameController.text.isNotEmpty) {
                   try {
@@ -81,7 +81,7 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
                     print(error);
                   }
                 } else {
-                  print('Le nom de la liste ne peut pas être vide.');
+                  print('Please enter a name for the list');
                 }
               },
             ),
@@ -98,12 +98,12 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Modifier la liste'),
+          title: Text('Update the list'),
           content: TextField(controller: _listNameController),
           actions: [
-            TextButton(child: Text('Annuler'), onPressed: () => Navigator.pop(context)),
+            TextButton(child: Text('Cancel'), onPressed: () => Navigator.pop(context)),
             TextButton(
-              child: Text('Enregistrer'),
+              child: Text('Save'),
               onPressed: () async {
                 final newName = _listNameController.text.trim();
                 if (newName.isNotEmpty) {
@@ -128,12 +128,12 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Archiver la liste'),
-          content: Text('Êtes-vous sûr de vouloir archiver cette liste ?'),
+          title: Text('Archive the list'),
+          content: Text('Are you sure you want to archive this list?'),
           actions: [
-            TextButton(child: Text('Annuler'), onPressed: () => Navigator.pop(context)),
+            TextButton(child: Text('Cancel'), onPressed: () => Navigator.pop(context)),
             TextButton(
-              child: Text('Archiver'),
+              child: Text('Archive'),
               onPressed: () async {
                 try {
                   await _trelloApi.archiveList(listId, true);
@@ -162,18 +162,18 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Créer une nouvelle carte'),
+              title: Text('Create a new card'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: _cardNameController,
-                      decoration: InputDecoration(hintText: "Nom de la carte"),
+                      decoration: InputDecoration(hintText: "Name of the card"),
                     ),
                     TextField(
                       controller: _cardDescController,
-                      decoration: InputDecoration(hintText: "Description de la carte"),
+                      decoration: InputDecoration(hintText: "Description of the card"),
                     ),
                     ...members.map((member) => CheckboxListTile(
                           title: Text(member.fullName),
@@ -189,11 +189,11 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Annuler'),
+                  child: Text('Cancel'),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 TextButton(
-                  child: Text('Créer'),
+                  child: Text('Create'),
                   onPressed: () async {
                     final cardName = _cardNameController.text.trim();
                     final cardDesc = _cardDescController.text.trim();
@@ -229,13 +229,13 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Modifier la carte'),
+              title: Text('Update the card'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: _cardNameController, decoration: InputDecoration(hintText: "Nom de la carte")),
-                    TextField(controller: _cardDescController, decoration: InputDecoration(hintText: "Description de la carte")),
+                    TextField(controller: _cardNameController, decoration: InputDecoration(hintText: "Name of the card")),
+                    TextField(controller: _cardDescController, decoration: InputDecoration(hintText: "Description of the card")),
                     ...allMembers.map((member) => CheckboxListTile(
                           title: Text(member.fullName),
                           value: memberSelections[member.id],
@@ -249,9 +249,9 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
                 ),
               ),
               actions: [
-                TextButton(child: Text('Annuler'), onPressed: () => Navigator.pop(context)),
+                TextButton(child: Text('Cancel'), onPressed: () => Navigator.pop(context)),
                 TextButton(
-                  child: Text('Enregistrer'),
+                  child: Text('Save'),
                   onPressed: () async {
                     final newName = _cardNameController.text.trim();
                     final newDesc = _cardDescController.text.trim();
@@ -286,15 +286,15 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Supprimer la carte'),
-          content: Text('Êtes-vous sûr de vouloir supprimer cette carte ?'),
+          title: Text('Delete the card'),
+          content: Text('Are you sure you want to delete this card?'),
           actions: [
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Cancel'),
               onPressed: () => Navigator.pop(context),
             ),
             TextButton(
-              child: Text('Supprimer'),
+              child: Text('Delete'),
               onPressed: () async {
                 try {
                   await _trelloApi.deleteCard(cardId);
@@ -400,7 +400,7 @@ class _BoardDetailScreenState extends State<BoardDetailScreen> {
               list.cards.isEmpty
                   ? Container(
                       padding: EdgeInsets.all(10),
-                      child: Text("Pas de cartes", style: TextStyle(color: Colors.grey)),
+                      child: Text("No cards yet", style: TextStyle(color: Colors.grey)),
                     )
                   : Column(
                       children: list.cards.map((card) {
