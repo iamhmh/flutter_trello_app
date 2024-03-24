@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trello_app/src/services/trello_auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
-    final TrelloAuthService _authService = TrelloAuthService();
+  final TrelloAuthService _authService = TrelloAuthService();
 
   void _showBottomSheet(BuildContext context) {
     showModalBottomSheet(
@@ -11,7 +11,7 @@ class HomeScreen extends StatelessWidget {
         return Container(
           width: double.infinity,
           padding: EdgeInsets.all(20),
-          height: 200,
+          height: 150,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -20,10 +20,6 @@ class HomeScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => _authService.authenticate(context),
                 child: Text('Log in with email'),
-              ),
-              ElevatedButton(
-                onPressed: () => _authService.authenticate(context),
-                child: Text('Log in with Google'),
               ),
             ],
           ),
@@ -35,74 +31,73 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff57b51),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, 
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 50),
-              child: SizedBox(
-                height: 400,
-                width: 400,
-                child: Image.asset('assets/images/logo.png'),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 40),
+      body: Stack(
+        children: <Widget>[
+          Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/images/background_login2.jpg'), fit: BoxFit.cover)),
+          ),
+          Container(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+              Colors.transparent,
+              Colors.transparent,
+              Color(0xfff57b51).withOpacity(0.9),
+              Color(0xfff57b51),
+            ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                SizedBox(height: 20),
+                Text(
+                  "Welcome!",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 38,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  "Ready to manage your tasks?",
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  height: 50,
+                  width: double.infinity,
+                  margin: EdgeInsets.only(left: 40, right: 40, bottom: 20),
+                  child: ElevatedButton(
+                    onPressed: () => _showBottomSheet(context),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Color(0xfff57b51),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
                     child: Text(
-                      'Just manage your tasks.',
-                      style: TextStyle(fontSize: 24, color: Color(0xfff8f3e5)),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                        onPressed: () => _showBottomSheet(context),
-                        child: Text(
-                          'Log in',
-                          style: TextStyle(fontSize: 12, color: Colors.black),
-                        ),
+                      "Log in or Sign up",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                        onPressed: () => _showBottomSheet(context),
-                        child: Text(
-                          'Sign up',
-                          style: TextStyle(fontSize: 12, color: Colors.black),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.1,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

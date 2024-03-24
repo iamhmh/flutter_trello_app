@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web_auth/flutter_web_auth.dart';
 import 'package:trello_app/src/screens/dashboard_screen.dart';
-import 'dart:developer';
 
 class TrelloAuthService {
   final String callbackUrlScheme = 'trello-auth-flutter';
@@ -16,7 +15,6 @@ class TrelloAuthService {
       final result = await FlutterWebAuth.authenticate(url: authUrl, callbackUrlScheme: callbackUrlScheme);
       final token = Uri.parse(result).queryParameters['token'] ?? Uri.parse(result).fragment.split("=")[1];
     
-      log('Token: $token');
       if (token.isNotEmpty) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DashboardScreen()));
       } else {

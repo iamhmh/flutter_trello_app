@@ -50,10 +50,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadUserInfo();
   }
 
-  Future<void> _loadUserInfo() async {
+Future<void> _loadUserInfo() async {
+    String token = Constants.apiToken;
     try {
-      var api = Provider.of<TrelloApi>(context, listen: false);
-      var userInfo = await api.getMemberInfo(Constants.apiToken);
+      var userInfo = await TrelloApi().getMemberInfo(token);
       setState(() {
         user = userInfo;
         isLoading = false;

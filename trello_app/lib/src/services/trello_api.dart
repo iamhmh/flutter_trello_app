@@ -297,7 +297,6 @@ class TrelloApi {
     final response = await http.get(url, headers: {'Accept': 'application/json'});
 
     if (response.statusCode == 200) {
-      print("Response body: ${response.body}");
       final jsonData = jsonDecode(response.body);
       return Member.fromJson(jsonData);
     } else {
