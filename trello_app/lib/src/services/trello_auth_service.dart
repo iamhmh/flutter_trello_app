@@ -3,9 +3,9 @@ import 'package:flutter_web_auth/flutter_web_auth.dart';
 import 'package:trello_app/src/screens/dashboard_screen.dart';
 
 class TrelloAuthService {
-  final String callbackUrlScheme = 'trello-auth-flutter';
-  final String authorizeUrl = "https://trello.com/1/authorize";
-  final String apiKey = 'c8065529ba56e9faab113d66aa08f125';
+  final String callbackUrlScheme = '';
+  final String authorizeUrl = "";
+  final String apiKey = '';
 
   Future<void> authenticate(BuildContext context) async {
     final String callbackUrl = '$callbackUrlScheme://callback';
